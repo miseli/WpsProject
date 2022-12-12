@@ -1,0 +1,53 @@
+blockquote, body, button, dd, div, dl, dt, form, h1, h2, h3, h4, h5, h6, input, li, ol, p, pre, td, textarea, th, ul {
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+
+blockquote, body, button, dd, div, dl, dt, form, h1, h2, h3, h4, h5, h6, input, li, ol, p, pre, td, textarea, th, ul {
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+
+td {
+    word-break: break-all;
+    word-wrap: break-word;
+    font-size: 16px;
+}
+
+.cube{
+    z-index: 99999;
+    position: relative;
+    background-color: white;
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    text-align: center;
+    width: 100%;
+}
+table thead tr {
+    background-color: #f1f2f6;
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    border-bottom-color: #a3c6e2;
+    border-color: #a3c6e2;
+    border-left-color: #a3c6e2;
+    border-right-color: #a3c6e2;
+    border-top-color: #a3c6e2;
+    border-style: none none solid;
+    border-width: medium medium 1px;
+    font-weight: bold;
+    font-size: 14px;
+    color: #414241;
+    line-height: 25px;
+    height: 25px;
+    text-align: center;
+    vertical-align: baseline;
+}
+
+.tag{
+    border-left: solid red 2px;
+}
