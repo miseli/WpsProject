@@ -5,6 +5,10 @@ var WPS_Enum = {
 	xlVAlignCenter: -4108,
 	xlHAlignCenter: -4108,
 	xlPatternSolid: 1,
+	xlAscending: 1,
+	xlSortColumns: 1,
+	xlPinYin: 1,
+	xlGuess: 0,
 }
 
 function GetUrlPath() {
@@ -31,6 +35,29 @@ function shellExecuteByOAAssist(param) {
 
 
 
+
+
+
+
+
+
+
+function 排序()
+{
+	(obj=>{
+		(objz=>{
+			objz.Clear();
+			objz.Add(Application.ActiveSheet.Range("A1"), undefined, WPS_Enum.xlAscending, undefined, undefined);
+		})(obj.SortFields);
+		obj.Header = WPS_Enum.xlGuess;
+		obj.MatchCase = false;
+		obj.SortMethod = WPS_Enum.xlPinYin;
+		obj.Orientation = WPS_Enum.xlSortColumns;
+		obj.SetRange(Application.Selection);
+		obj.Apply();
+	})(Application.ActiveSheet.Sort);
+
+}
 
 let $AddScript = function(t) {
 	var e = $("<script>").attr("src", t);
