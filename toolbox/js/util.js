@@ -1,5 +1,8 @@
 //在后续的wps版本中，wps的所有枚举值都会通过wps.Enum对象来自动支持，现阶段先人工定义
 var WPS_Enum = {
+	xlColumns: 2,
+	xlDataSeriesLinear: -4132,
+	xlDay: 1,
 	msoCTPDockPositionLeft: 0,
 	msoCTPDockPositionRight: 2,
 	xlVAlignCenter: -4108,
@@ -9,6 +12,13 @@ var WPS_Enum = {
 	xlSortColumns: 1,
 	xlPinYin: 1,
 	xlGuess: 0,
+	xlPatternNone: -4142,
+	xlPrintErrorsDisplayed: 0,
+	xlLandscape: 2,
+	xlDownThenOver: 1,
+	xlPaperA4: 9,
+	xlPageBreakPreview: 2,
+	xlNormalView: 1,
 }
 
 function GetUrlPath() {
@@ -41,19 +51,83 @@ function shellExecuteByOAAssist(param) {
 
 
 
+function 智能填充(){
+	Application.Selection.DataSeries(WPS_Enum.xlColumns, WPS_Enum.xlDataSeriesLinear, WPS_Enum.xlDay, undefined, undefined, true);
+}
+
+function 分页预览(t)
+{
+	if(undefined==t)
+		Application.ActiveWindow.View = WPS_Enum.xlNormalView
+	else
+		Application.ActiveWindow.View = WPS_Enum.xlPageBreakPreview;
+}
+
+function 打印设置()
+{
+	(obj=>{
+		obj.LeftHeader = "";
+		obj.CenterHeader = "";
+		obj.RightHeader = "";
+		obj.LeftFooter = "";
+		obj.CenterFooter = "第 &P 页，共 &N 页";
+		obj.RightFooter = "";
+		obj.Orientation = WPS_Enum.xlLandscape;
+		obj.FitToPagesWide = 1;
+		obj.FitToPagesTall = 1;
+		obj.FirstPageNumber = true;
+		obj.LeftMargin = 17.007874;
+		obj.RightMargin = 17.007874;
+		obj.TopMargin = 17.007874;
+		obj.BottomMargin = 17.007874;
+		obj.HeaderMargin = 11.338583;
+		obj.FooterMargin = 11.338583;
+		obj.CenterFooter = "第 &P 页，共 &N 页";
+		obj.CenterHorizontally = false;
+		obj.CenterVertically = false;
+		obj.PrintErrors = WPS_Enum.xlPrintErrorsDisplayed;
+		obj.Order = WPS_Enum.xlDownThenOver;
+		obj.PrintGridlines = false;
+		obj.PrintHeadings = false;
+		obj.BlackAndWhite = false;
+		obj.PrintQuality(undefined, 600);
+		obj.PaperSize = WPS_Enum.xlPaperA4;
+		obj.PrintComments = -4142;
+		obj.PrintArea = "";
+		obj.PrintTitleRows = "";
+		obj.PrintTitleColumns = "";
+	})(Application.ActiveSheet.PageSetup);
+}
+
+function 背景填充(color, target = Application.Selection)
+{
+	// 蓝:0xff0000
+	// 绿:0x00ff00
+	// 红:0x0000ff
+	(obj=>{
+		if(color==undefined){
+			Application.Selection.Interior.Pattern = WPS_Enum.xlPatternNone;
+		}else{
+			obj.Pattern = WPS_Enum.xlPatternSolid;
+			obj.Color = color;
+			obj.TintAndShade = 0;
+			obj.PatternColorIndex = -4105;
+		}
+	})(target.Interior);
+}
 
 function 排序()
 {
 	(obj=>{
 		(objz=>{
 			objz.Clear();
-			objz.Add(Application.ActiveSheet.Range("A1"), undefined, WPS_Enum.xlAscending, undefined, undefined);
+			objz.Add(Application.ActiveCell, undefined, WPS_Enum.xlAscending, undefined, undefined);
 		})(obj.SortFields);
 		obj.Header = WPS_Enum.xlGuess;
 		obj.MatchCase = false;
 		obj.SortMethod = WPS_Enum.xlPinYin;
 		obj.Orientation = WPS_Enum.xlSortColumns;
-		obj.SetRange(Application.Selection);
+		obj.SetRange(Application.ActiveSheet.Range('A3:N21'));
 		obj.Apply();
 	})(Application.ActiveSheet.Sort);
 
@@ -246,11 +320,9 @@ function 重点检维修分享() {
 	curSheet.Range("M3:M" + (curSheet.Columns.CurrentRegion.Rows.Count)).ClearContents()
 
 	let tbl = curSheet.Range("A2").CurrentRegion
-	tbl.Select()
+
 	//居中自动换行
-	tbl.VerticalAlignment = wps.Enum.xlVAlignCenter;
-	tbl.HorizontalAlignment = wps.Enum.xlHAlignCenter;
-	tbl.WrapText = true;
+	垂直水平居中自动换行(tbl)
 
 	//删掉没有动火受限行
 	for (let i = 3, j = 0; i <= tbl.Rows.Count;) {
@@ -260,10 +332,7 @@ function 重点检维修分享() {
 		if (/特级/.test(tmp)) {
 			// tbl.Rows.Item(i).Columns.Item("A").Value2 = "**"
 			//涂黄
-			tbl.Rows.Item(i).Interior
-			tbl.Rows.Item(i).Interior.Pattern = wps.Enum.xlPatternSolid;
-			tbl.Rows.Item(i).Interior.Color = 65535;
-			tbl.Rows.Item(i).Interior.TintAndShade = 0;
+			背景填充(0x00ffff, tbl.Rows.Item(i))
 		}
 		if (!/(动火|受限)/.test(tmp)) {
 			tbl.Rows.Item(i).Delete()
@@ -276,11 +345,39 @@ function 重点检维修分享() {
 	}
 
 	curSheet.Range("C:C,D:D,F:F,H:H,N:N").Delete()
-	curSheet.Columns.Item("G:G").Insert(-4159, undefined)
-	curSheet.Range("G2").ColumnWidth = 28.125
-	curSheet.Range("G2").Formula = "动火、受限作业票";
+	curSheet.Columns.Item("F:F").Insert(-4159, undefined)
+	curSheet.Range("F2").ColumnWidth = 28.125
+	curSheet.Range("F2").Formula = "动火、受限作业票";
 
-	tbl.Select()
+}
+
+function 检维修日表() {
+	let curSheet = Application.ActiveSheet
+
+	let tbl = curSheet.Range("A2").CurrentRegion
+
+	//居中自动换行
+	垂直水平居中自动换行(tbl)
+
+	//删掉没有动火受限行
+	for (let i = 3, j = 0; i <= tbl.Rows.Count;i++) {
+		let tmp = tbl.Rows.Item(i).Columns.Item("K").Text
+
+		if (/(动火|受限)/g.test(tmp)) {
+			背景填充(0x00ffff, tbl.Rows.Item(i))
+		}
+		if (/特级/g.test(tmp)){
+			tbl.Rows.Item(i).Columns.Item("B").Value2 = "**"
+			tbl.Rows.Item(i).Columns.Item("B").Font.Bold = true
+		}
+	}
+
+	curSheet.Range("A:A,C:C,L:L,M:M").EntireColumn.Hidden = true
+	// curSheet.Columns.Item("G:G").Insert(-4159, undefined)
+	// curSheet.Range("G2").ColumnWidth = 28.125
+	// curSheet.Range("G2").Formula = "动火、受限作业票";
+
+	// tbl.Select()
 }
 
 /*本示例选定工作表 Sheet1 上的当前区域。*/
@@ -296,10 +393,10 @@ function 选择表格有效区并下移一行() {
 }
 
 
-function 选中部分水平上下居中自动换行() {
-	Application.Selection.VerticalAlignment = wps.Enum.xlVAlignCenter;
-	Application.Selection.HorizontalAlignment = wps.Enum.xlHAlignCenter;
-	Application.Selection.WrapText = true;
+function 垂直水平居中自动换行(target = Application.Selection) {
+	target.VerticalAlignment = WPS_Enum.xlVAlignCenter;
+	target.HorizontalAlignment = WPS_Enum.xlHAlignCenter;
+	target.WrapText = true;
 }
 
 function 自动行高() {

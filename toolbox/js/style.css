@@ -51,3 +51,7 @@ table thead tr {
 .tag{
     border-left: solid red 2px;
 }
+
+button{
+    margin:3px;
+}

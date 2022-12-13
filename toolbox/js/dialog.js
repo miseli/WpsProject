@@ -1,3 +1,37 @@
+const events = {
+	"风险研判":()=>{
+		风险研判()
+	},
+	"备份当前Sheet":()=>{
+		备份当前Sheet()
+	},
+	"重点检维修分享":()=>{
+		重点检维修分享()
+	},
+	"垂直水平居中自动换行":()=>{
+		垂直水平居中自动换行()
+	},
+	"自动列宽":()=>{
+		自动列宽()
+	},
+	"自动行高":()=>{
+		自动行高()
+	},
+	"检维修日表":()=>{
+		检维修日表()
+	},
+	"打印设置":()=>{
+		打印设置()
+		分页预览(1)
+	}
+}
+
+// $(function(){
+// 	$('.buttons button').click(function(e){
+
+// 	})
+// })
+
 function onbuttonclick(idStr) {
 	switch (idStr) {
 		case "getDocName":
@@ -69,9 +103,9 @@ function onbuttonclick(idStr) {
 				重点检维修分享()
 				break;
 			}
-		case "水平上下居中自动换行":
+		case "垂直水平居中自动换行":
 			{
-				选中部分水平上下居中自动换行()
+				垂直水平居中自动换行()
 				break;
 			}
 		case "自动列宽":
@@ -82,6 +116,17 @@ function onbuttonclick(idStr) {
 		case "自动行高":
 			{
 				自动行高()
+				break;
+			}
+		case "检维修日表":
+			{
+				检维修日表()
+				break;
+			}
+		case "打印设置":
+			{
+				打印设置()
+				分页预览(1)
 				break;
 			}
 	}
