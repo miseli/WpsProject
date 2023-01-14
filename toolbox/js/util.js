@@ -43,13 +43,40 @@ function shellExecuteByOAAssist(param) {
 
 
 
+function 合并居中单元格(obj,txt){
+	obj.Merge(false);
+	obj.HorizontalAlignment = WPS_Enum.xlHAlignCenter;
+	obj.Value2 = txt
+	return obj;
+}
 
+function 获取尺寸(){
+	debugger
+	return
+	document.getElementById("text_p").innerText += Application.Selection.Width + 'x' + Application.Selection.Height + '\r\n'
+	let curSheet = Application.ActiveSheet
+	合并居中单元格(Application.ActiveSheet.Range('A1:A3'),'序号')
+	合并居中单元格(Application.ActiveSheet.Range('B1:B3'),'车间')
+	合并居中单元格(Application.ActiveSheet.Range('C1:C3'),'作业项目名称')
+	合并居中单元格(Application.ActiveSheet.Range('D1:D3'),'类别')
+	合并居中单元格(Application.ActiveSheet.Range('E1:E3'),'检查时间')
+	合并居中单元格(Application.ActiveSheet.Range('F1:H1'),'监护人提问情况')
+	合并居中单元格(Application.ActiveSheet.Range('F2:H2'),'a：熟练掌握\nb：一般掌握\nc：  未掌握')
+	合并居中单元格(Application.ActiveSheet.Range('F3'),'监护人职责')
+	合并居中单元格(Application.ActiveSheet.Range('G3'),'作业存在风险')
+	合并居中单元格(Application.ActiveSheet.Range('H3'),'安全措施落实')
+	合并居中单元格(Application.ActiveSheet.Range('I1:J2'),'巡查情况')
+	合并居中单元格(Application.ActiveSheet.Range('I3'),'安环处')
+	合并居中单元格(Application.ActiveSheet.Range('J3'),'车间管理人员')
 
-
-
-
-
-
+	合并居中单元格(Application.ActiveSheet.Range('K1:K3'),'是否开展研判')
+	合并居中单元格(Application.ActiveSheet.Range('L1:L3'),'是否重点特殊作业')
+	合并居中单元格(Application.ActiveSheet.Range('M1:O2'),'重点特殊作业')
+	合并居中单元格(Application.ActiveSheet.Range('M3'),'是否有安全员、技术员、设备员监护')
+	合并居中单元格(Application.ActiveSheet.Range('N3'),'车间主任、安环处、公司领导是否进行2次巡查')
+	合并居中单元格(Application.ActiveSheet.Range('O3'),'是否全程录像')
+	合并居中单元格(Application.ActiveSheet.Range('P1:P3'),'备注')
+}
 
 function 智能填充(){
 	Application.Selection.DataSeries(WPS_Enum.xlColumns, WPS_Enum.xlDataSeriesLinear, WPS_Enum.xlDay, undefined, undefined, true);
@@ -169,7 +196,7 @@ Date.prototype.DateAdd = function(interval, number) {
 
 
 
-function $getWork(n) {
+async function $getWork(n) {
 
 	let d = n*-1 || 0
 
@@ -180,13 +207,24 @@ function $getWork(n) {
 	startTime = startTime[0] && startTime[0].value || new Date().DateAdd('d', d).toLocaleDateString().replace(/\//g, '-')
 	endTime = endTime[0] && endTime[0].value || new Date().DateAdd('d', d).toLocaleDateString().replace(/\//g, '-')
 
-	$.get('http://10.10.15.32/DTWorkBackup/DTWorkBackupOrgDataList', {
-		"backupStatus": "1",
-		"OrganizationID": "C13362DB-BA91-41D0-9D3E-DDFC20B240F2",
-		"WorkBeginDateStartDate": startTime,
-		"WorkBeginDateEndDate": endTime,
-		"pi_currentpage": "1"
-	}).then(res => {
+	let res = ''
+	try{
+		res = await $.get('http://10.10.15.32/DTWorkBackup/DTWorkBackupOrgDataList', {
+			"backupStatus": "1",
+			"OrganizationID": "C13362DB-BA91-41D0-9D3E-DDFC20B240F2",
+			"WorkBeginDateStartDate": startTime,
+			"WorkBeginDateEndDate": endTime,
+			"pi_currentpage": "1"
+		})
+	}catch(e){
+		res = await $.get('http://Winmicr-3ne6125:1532/DTWorkBackup/DTWorkBackupOrgDataList', {
+			"backupStatus": "1",
+			"OrganizationID": "C13362DB-BA91-41D0-9D3E-DDFC20B240F2",
+			"WorkBeginDateStartDate": startTime,
+			"WorkBeginDateEndDate": endTime,
+			"pi_currentpage": "1"
+		})
+	}
 		let result = {}
 		let convert = function(a, b) {
 			if (a in result) {} else {
@@ -299,7 +337,6 @@ function $getWork(n) {
 		}
 		log(result)
 		console.table(result)
-	})
 }
 
 function 重点检维修分享() {
@@ -345,9 +382,9 @@ function 重点检维修分享() {
 	}
 
 	curSheet.Range("C:C,D:D,F:F,H:H,N:N").Delete()
-	curSheet.Columns.Item("F:F").Insert(-4159, undefined)
-	curSheet.Range("F2").ColumnWidth = 28.125
-	curSheet.Range("F2").Formula = "动火、受限作业票";
+	curSheet.Columns.Item("H:H").Insert(-4159, undefined)
+	curSheet.Range("H2").ColumnWidth = 28.125
+	curSheet.Range("H2").Formula = "动火、受限作业票";
 
 }
 
@@ -441,24 +478,69 @@ function 统计作业() {
 	//  }
 }
 
-function 风险研判() {
+// function 风险研判() {
+// 	let data = { userName: 20421, password: 'Hjjt@123456' },
+// 		data1 = { Name: 20421, Password: 'Hjjt@123456' },
+// 		host = '10.10.15.32'
+// 	$.post(`http://${host}/Home/CheckLoginInfo`, data).then(res => {
+// 		if (res != "") {
+// 			alert(res)
+// 			return false;
+// 		}
+// 		$.post(`http://${host}/Home/PortalIndex`, data1).then(res => {
+// 			$.get(`http://${host}/Home/PortalEnter`).then(res => {
+// 				$getWork(-1);
+// 				return
+// 				location.href = `http://${host}/Home/MainView`
+// 			})
+// 		})
+// 	}).fail(e=>{
+// 		host = 'WINMICR-3NE6125'
+// 	})
+// }
+async function 风险研判() {
+
 	let data = { userName: 20421, password: 'Hjjt@123456' },
-		data1 = { Name: 20421, Password: 'Hjjt@123456' }
-	$.post('http://10.10.15.32/Home/CheckLoginInfo', data).then(res => {
-		if (res != "") {
-			alert(res)
+		data1 = { Name: 20421, Password: 'Hjjt@123456' },
+		ret = '',url = ''
+
+	let urls = ['127.0.0.1:1532','WINMICR-3NE6125:1532','10.10.15.32:80']
+	let reqs = []
+
+	// for(let url of urls){
+	// 	reqs.push($.post(`http://${url}/Home/CheckLoginInfo`, data))
+	// }
+
+	// let ret = await $.when(reqs).fail((a,b,c){
+	// 	debugger
+	// 	if(typeof(a)=='object') return a
+	// 	if(typeof(b)=='object') return b
+	// 	if(typeof(c)=='object') return c
+	// }).done(res=>{
+	// 	debugger
+	// })
+	// return
+
+	try{
+		url = urls[1]
+		ret = await $.post(`http://${url}/Home/CheckLoginInfo`, data)
+	}catch(e){
+		url = urls[2]
+		ret = await $.post(`http://${url}/Home/CheckLoginInfo`, data)
+		if (ret != "") {
+			alert(ret)
 			return false;
 		}
-		$.post('http://10.10.15.32/Home/PortalIndex', data1).then(res => {
-			$.get('http://10.10.15.32/Home/PortalEnter').then(res => {
-				$getWork(-1);
-				return
-				location.href = 'http://10.10.15.32/Home/MainView'
-			})
+	}
+
+	$.post(`http://${url}/Home/PortalIndex`, data1).then(res => {
+		$.get(`http://${url}/Home/PortalEnter`).then(res => {
+			$getWork(-1);
+			return
+			location.href = `http://${url}/Home/MainView`
 		})
 	})
 }
-
 
 function 备份当前Sheet() {
 	Application.ActiveWindow.SelectedSheets.Copy(undefined, Application.ActiveSheet);

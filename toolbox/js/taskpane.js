@@ -65,6 +65,11 @@ function onbuttonclick(idStr) {
 				重点检维修分享()
 				break;
 			}
+		case "获取尺寸":
+			{
+				获取尺寸()
+				break;
+			}
 	}
 }
 
