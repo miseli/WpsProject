@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="../js/webframecss@v=1.0.0.css" type="text/css" media="all"> -->
 </head>
 <script type="text/javascript" src="../js/jquery.min.js"></script>
+<script type="text/javascript" src="../js/axios.min.js"></script>
 <script type="text/javascript" src="../js/util.js"></script>
 <script type="text/javascript" src="../js/dialog.js"></script>
 <script type="text/javascript" src="../.debugTemp/wpsjsrpcsdk.js"></script>
@@ -26,45 +27,67 @@
         <div class="divItem">开发文档: <span style="font-weight: bolder;color: slateblue;">https://open.wps.cn/docs/office</span></div> -->
         <hr>
         <div class="divItem">
-            <div class="buttons">
-                <button  onclick="onbuttonclick('风险研判')">风险研判</button>
-                <label>日期差值：<input id="date1" type="text"/></label>
-                <br/>
-                <button  onclick="onbuttonclick('addString')">统计作业</button>
-                <button  onclick="onbuttonclick('重点检维修分享')">重点检维修分享</button>
-                <button  onclick="onbuttonclick('检维修日表')">检维修日表</button>
-                <button  onclick="onbuttonclick('备份当前Sheet')">备份当前Sheet</button>
-                <button  onclick="onbuttonclick('打印设置')">打印设置</button>
-                <button  onclick="onbuttonclick('获取尺寸')">获取尺寸</button>
-                <br/>
-                <button  onclick="onbuttonclick('自动行高')">自动行高</button>
-                <button  onclick="onbuttonclick('自动列宽')">自动列宽</button>
-                <button  onclick="onbuttonclick('垂直水平居中自动换行')">垂直水平居中自动换行</button>
+            <div>
+                <div class="buttons">
+                    <button  onclick="onbuttonclick('风险研判')">风险研判</button>
+                    <label>日期差值：<input id="date1" type="text"/></label>
+                    <br/>
+                    <button  onclick="onbuttonclick('addString')">统计作业</button>
+                    <button  onclick="onbuttonclick('重点检维修分享')">重点检维修分享</button>
+                    <button  onclick="onbuttonclick('检维修日表')">检维修日表</button>
+                    <button  onclick="onbuttonclick('备份当前Sheet')">备份当前Sheet</button>
+                    <!-- <button  onclick="onbuttonclick('打印设置')">打印设置</button> -->
+                    <!-- <button  onclick="onbuttonclick('获取尺寸')">获取尺寸</button> -->
+                    <br/>
+                    <button  onclick="onbuttonclick('自动行高')">自动行高</button>
+                    <button  onclick="onbuttonclick('自动列宽')">自动列宽</button>
+                    <button  onclick="onbuttonclick('垂直水平居中自动换行')">垂直水平居中自动换行</button>
+                </div>
+                <div id="DemoSpan">
+                </div>
+                <span>http://127.0.0.1:3889/ui/dialog.html</span>
+                <span id="word_url"></span>
             </div>
-            <div id="DemoSpan">
+            <div>
+
             </div>
+        </div>
+        <div class="cube">
+
         </div>
         <hr>
-        <div class="divItem">统计：<br/>
+        <div class="divItem">
             <span id="text_p"></span>
+            <span id="text_pp"></span>
         </div>
+
     </div>
 </body>
 
 <style>
-    .global{
+    .global {
         font-size: 15px;
         min-height: 95%;
     }
-    .divItem{
+    .divItem {
         margin-left: 5px;
         margin-bottom: 18px;
         font-size: 15px;
         word-wrap:break-word;
+        display: flex;
+        flex-direction: row;
     }
-    #text_p{
+    #text_p, #text_pp {
         white-space: pre-line;
+        width: 50%;
+        /*overflow: scroll;*/
+    }
+    #text_p {
         user-select:all;
+    }
+    #text_pp {
+        font-size: 0.6rem;
+        font-family: fangsong;
     }
 </style>
 </html>

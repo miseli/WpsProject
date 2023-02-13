@@ -197,73 +197,120 @@ Date.prototype.DateAdd = function(interval, number) {
 
 
 async function $getWork(n) {
+	$('#text_pp').text('')
+	let host = '192.168.1.102', protocol = 'http', port = 4436
+  let d = n * -1 || 0
 
-	let d = n*-1 || 0
+  let startTime = $("#datachart > div.ui-searchbar > div.base > div:nth-child(2) > div.editor-field > input.ui-datetime.ui-dateperiod-start.value-elem.autosave")
 
-	let startTime = $("#datachart > div.ui-searchbar > div.base > div:nth-child(2) > div.editor-field > input.ui-datetime.ui-dateperiod-start.value-elem.autosave")
+  let endTime = $("#datachart > div.ui-searchbar > div.base > div:nth-child(2) > div.editor-field > input.ui-datetime.ui-dateperiod-end.value-elem.autosave")
 
-	let endTime = $("#datachart > div.ui-searchbar > div.base > div:nth-child(2) > div.editor-field > input.ui-datetime.ui-dateperiod-end.value-elem.autosave")
+  startTime = startTime[0] && startTime[0].value || new Date().DateAdd('d', d).toLocaleDateString().replace(/\//g, '-')
+  endTime = endTime[0] && endTime[0].value || new Date().DateAdd('d', d).toLocaleDateString().replace(/\//g, '-')
 
-	startTime = startTime[0] && startTime[0].value || new Date().DateAdd('d', d).toLocaleDateString().replace(/\//g, '-')
-	endTime = endTime[0] && endTime[0].value || new Date().DateAdd('d', d).toLocaleDateString().replace(/\//g, '-')
-
-	let res = ''
-	try{
-		res = await $.get('http://10.10.15.32/DTWorkBackup/DTWorkBackupOrgDataList', {
-			"backupStatus": "1",
-			"OrganizationID": "C13362DB-BA91-41D0-9D3E-DDFC20B240F2",
-			"WorkBeginDateStartDate": startTime,
-			"WorkBeginDateEndDate": endTime,
-			"pi_currentpage": "1"
-		})
-	}catch(e){
-		res = await $.get('http://Winmicr-3ne6125:1532/DTWorkBackup/DTWorkBackupOrgDataList', {
-			"backupStatus": "1",
-			"OrganizationID": "C13362DB-BA91-41D0-9D3E-DDFC20B240F2",
-			"WorkBeginDateStartDate": startTime,
-			"WorkBeginDateEndDate": endTime,
-			"pi_currentpage": "1"
-		})
-	}
-		let result = {}
-		let convert = function(a, b) {
-			if (a in result) {} else {
-				result[a] = 0
-			}
-			result[a] += parseInt(b)
+  const CancelToken = axios.CancelToken;
+  let urls = [
+  	'10.10.15.32',
+  	'127.0.0.1:1532',
+  	'192.168.1.102:1532', //权哥
+  	'192.168.1.103:1532', //佳男
+  	'192.168.1.104:1532', //卫东
+  	'192.168.1.105:1532', //张震
+  	'192.168.1.106:1532', //王迪
+  	'192.168.1.107:1532', //李柯燚
+  	'192.168.1.108:1532', //于东博
+  ]
+  sources = urls.map(t => CancelToken.source())
+  let rs = urls.map((u, id) => axios.get(`http://${u}/DTWorkBackup/DTWorkBackupOrgDataList`, {
+    cancelToken: sources[id].token,
+    params: {
+      "backupStatus": "1", //1:报备, 2:补报
+      "OrganizationID": "C13362DB-BA91-41D0-9D3E-DDFC20B240F2",
+      "WorkBeginDateStartDate": startTime,
+      "WorkBeginDateEndDate": endTime,
+      "pi_currentpage": "1",
+      // "_": new Date().getTime()
+    },
+		proxy: {
+			host,
+			port,
 		}
-		let log = function(a) {
-			console.log(a['单位'])
-			console.log(a['特级动火'])
-			console.log(a['一级动火'])
-			console.log(a['二级动火'])
-			console.log(a['受限'])
-			console.log(a['盲板'])
-			console.log(a['高处'])
-			console.log(a['吊装'])
-			console.log(a['临时用电'])
-			console.log(a['动土'])
-			console.log(a['断路'])
-			console.log(a['检维修'])
-			console.log(a['合计'])
+  }))
+	// rs = rs.concat(urls.map((u, id) => axios.get(u, {
+    // cancelToken: sources[id].token,
+    // params: {
+      // "backupStatus": "1",
+      // "OrganizationID": "C13362DB-BA91-41D0-9D3E-DDFC20B240F2",
+      // "WorkBeginDateStartDate": startTime,
+      // "WorkBeginDateEndDate": endTime,
+      // "pi_currentpage": "1"
+    // }
+  // })))
 
-			if (a['特级动火'] + a['一级动火'] + a['二级动火'] + a['受限'] + a['盲板'] + a['高处'] + a['吊装'] + a['临时用电'] + a['动土'] + a['断路'] + a['检维修'] != a['合计']) {
-				alert('数量不对,失败')
-				return;
-			}
+  for(let id = 0; id<rs.length; id++){
+  	let r = rs[id]
+    r.then(function(res){
+      printformat(res.data, startTime, endTime, id)
+			let t = $('#text_pp').text()
+			$('#text_pp').text(id+'成功\r\n'+t)
+      sources.map((source, i) => {
+        if (i != id){
+					source.cancel('1111', i)
+				}
+      })
+    }).catch(err => {
+    	console.log(id)
+      sources[id].cancel('没有通路', id)
+			let t = $('#text_pp').text()
+			$('#text_pp').text(t + urls[id] + ' ' + err + '\r\n')
+    })
+  }
+}
 
-			if(a['单位']!='乙烯分公司')
-			{
-				alert('公司不对,失败')
-				return;
-			}
+function printformat(res,startTime, endTime, id){
+	console.log(`成功${id}`)
+  let result = {}
+  let convert = function(a, b) {
+    if (a in result) {} else {
+      result[a] = 0
+    }
+    result[a] += parseInt(b)
+  }
+  let log = function(a) {
+    console.log(a['单位'])
+    console.log(a['特级动火'])
+    console.log(a['一级动火'])
+    console.log(a['二级动火'])
+    console.log(a['受限'])
+    console.log(a['盲板'])
+    console.log(a['高处'])
+    console.log(a['吊装'])
+    console.log(a['临时用电'])
+    console.log(a['动土'])
+    console.log(a['断路'])
+    console.log(a['检维修'])
+    console.log(a['合计'])
 
-			let tb = $('.cube')
-			if (tb.length <= 0) {
-				tb = $('<div class="cube" style="z-index: 99999;position: relative;background-color:white;">')
-				tb.appendTo('body')
-			}
-			tb.html(`
+    if (a['特级动火'] + a['一级动火'] + a['二级动火'] + a['受限'] + a['盲板'] + a['高处'] + a['吊装'] + a['临时用电'] + a['动土'] + a['断路'] + a['检维修'] != a['合计']) {
+      alert('数量不对,失败')
+      return;
+    }
+
+    if (a['单位'] != '乙烯分公司') {
+      alert('公司不对,失败')
+      return;
+    }
+
+    let word_url = 'https://cube123.cn/wpsplugin/toolbox/jsplugins.xml'
+    $('#word_url').html(`<a href="${word_url}" target="_blank" download>风险研判下载</a>`)
+
+    let tb = $('.cube')
+    if (tb.length <= 0) {
+      tb = $('<div class="cube">')
+      tb.appendTo('body')
+    }
+
+    tb.html(`
 				<table style="text-align: center; width: 100%;" border="1">
 					<thead>
 						<tr class="header">
@@ -301,42 +348,43 @@ async function $getWork(n) {
 					</tbody>
 				</table>
 			`)
-		}
-		let count = $(res).find('#C13362DB-BA91-41D0-9D3E-DDFC20B240F2 td'),
-			headers = $(res).find('.header th')
-		for (let i = 0; i < count.length; i++) {
-			let k = $(headers[i]).text().replace(/\s+/g, ''),
-				v = $(count[i]).text().replace(/\s+/g, '')
-			if (/无特殊/.test(k)) {
-				convert('检维修', v)
-			} else if (/(动火特级|特级动火)/.test(k)) {
-				convert('特级动火', v)
-			} else if (/(动火一级|一级动火)/.test(k)) {
-				convert('一级动火', v)
-			} else if (/(动火二级|二级动火)/.test(k)) {
-				convert('二级动火', v)
-			} else if (/受限/.test(k)) {
-				convert('受限', v)
-			} else if (/高处/.test(k)) {
-				convert('高处', v)
-			} else if (/盲板/.test(k)) {
-				convert('盲板', v)
-			} else if (/断路/.test(k)) {
-				convert('断路', v)
-			} else if (/动土/.test(k)) {
-				convert('动土', v)
-			} else if (/吊装/.test(k)) {
-				convert('吊装', v)
-			} else if (/临时用电/.test(k)) {
-				convert('临时用电', v)
-			} else if (/合计/.test(k)) {
-				convert('合计', v)
-			} else if (/单位/.test(k)) {
-				result['单位'] = v
-			}
-		}
-		log(result)
-		console.table(result)
+  }
+
+  let count = $(res).find('#C13362DB-BA91-41D0-9D3E-DDFC20B240F2 td'),
+    headers = $(res).find('.header th')
+  for (let i = 0; i < count.length; i++) {
+    let k = $(headers[i]).text().replace(/\s+/g, ''),
+      v = $(count[i]).text().replace(/\s+/g, '')
+    if (/无特殊/.test(k)) {
+      convert('检维修', v)
+    } else if (/(动火特级|特级动火)/.test(k)) {
+      convert('特级动火', v)
+    } else if (/(动火一级|一级动火)/.test(k)) {
+      convert('一级动火', v)
+    } else if (/(动火二级|二级动火)/.test(k)) {
+      convert('二级动火', v)
+    } else if (/受限/.test(k)) {
+      convert('受限', v)
+    } else if (/高处/.test(k)) {
+      convert('高处', v)
+    } else if (/盲板/.test(k)) {
+      convert('盲板', v)
+    } else if (/断路/.test(k)) {
+      convert('断路', v)
+    } else if (/动土/.test(k)) {
+      convert('动土', v)
+    } else if (/吊装/.test(k)) {
+      convert('吊装', v)
+    } else if (/临时用电/.test(k)) {
+      convert('临时用电', v)
+    } else if (/合计/.test(k)) {
+      convert('合计', v)
+    } else if (/单位/.test(k)) {
+      result['单位'] = v
+    }
+  }
+  log(result)
+  console.table(result)
 }
 
 function 重点检维修分享() {
@@ -500,12 +548,12 @@ function 统计作业() {
 // }
 async function 风险研判() {
 
-	let data = { userName: 20421, password: 'Hjjt@123456' },
-		data1 = { Name: 20421, Password: 'Hjjt@123456' },
-		ret = '',url = ''
+	// let data = { userName: 20421, password: 'Hjjt@123456' },
+	// 	data1 = { Name: 20421, Password: 'Hjjt@123456' },
+	// 	ret = '',url = ''
 
-	let urls = ['127.0.0.1:1532','WINMICR-3NE6125:1532','10.10.15.32:80']
-	let reqs = []
+	// let urls = ['10.10.15.32:80', '127.0.0.1:1532','WINMICR-3NE6125:1532']
+	// let reqs = []
 
 	// for(let url of urls){
 	// 	reqs.push($.post(`http://${url}/Home/CheckLoginInfo`, data))
@@ -521,25 +569,32 @@ async function 风险研判() {
 	// })
 	// return
 
-	try{
-		url = urls[1]
-		ret = await $.post(`http://${url}/Home/CheckLoginInfo`, data)
-	}catch(e){
-		url = urls[2]
-		ret = await $.post(`http://${url}/Home/CheckLoginInfo`, data)
-		if (ret != "") {
-			alert(ret)
-			return false;
-		}
-	}
+	// try{
+	// 	url = urls[0]
+	// 	ret = await $.post(`http://${url}/Home/CheckLoginInfo`, data)
+	// }catch(e){
+	// 	try{
+	// 			url = urls[1]
+	// 			ret = await $.post(`http://${url}/Home/CheckLoginInfo`, data)
+	// 	}catch(e){
+	// 			url = urls[2]
+	// 			ret = await $.post(`http://${url}/Home/CheckLoginInfo`, data)
+	// 	}
+	// }
 
-	$.post(`http://${url}/Home/PortalIndex`, data1).then(res => {
-		$.get(`http://${url}/Home/PortalEnter`).then(res => {
+	// if (ret != "") {
+	// 	alert(ret)
+	// 	return false;
+	// }
+	// debugger
+
+	// $.post(`http://${url}/Home/PortalIndex`, data1).then(function(res){
+		// $.get(`http://${url}/Home/PortalEnter`).then(function(res){
 			$getWork(-1);
-			return
-			location.href = `http://${url}/Home/MainView`
-		})
-	})
+			// return
+			// location.href = `http://${url}/Home/MainView`
+		// })
+	// })
 }
 
 function 备份当前Sheet() {
@@ -555,7 +610,7 @@ $(function(){
 			$getWork(d)
 		}
 	})
-	$('#text_p').dblclick(function(){
+	$('#text_p, #text_pp').dblclick(function(){
 		this.innerText = ''
 	})
 })
