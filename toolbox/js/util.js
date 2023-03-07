@@ -198,7 +198,7 @@ Date.prototype.DateAdd = function(interval, number) {
 
 async function $getWork(n) {
 	$('#text_pp').text('')
-	let host = '192.168.1.102', protocol = 'http', port = 4436
+	let host = '192.168.1.102', protocol = 'http', port = 4480
   let d = n * -1 || 0
 
   let startTime = $("#datachart > div.ui-searchbar > div.base > div:nth-child(2) > div.editor-field > input.ui-datetime.ui-dateperiod-start.value-elem.autosave")
@@ -252,7 +252,7 @@ async function $getWork(n) {
     r.then(function(res){
       printformat(res.data, startTime, endTime, id)
 			let t = $('#text_pp').text()
-			$('#text_pp').text(id+'成功\r\n'+t)
+			$('#text_pp').text('成功' + urls[id] + '\r\n' + t)
       sources.map((source, i) => {
         if (i != id){
 					source.cancel('1111', i)
