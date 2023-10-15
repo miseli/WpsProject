@@ -14,7 +14,6 @@ function InvokeFromSystemDemo(param){
             if (wps.EtApplication().ActiveWorkbook){
                 docName = wps.EtApplication().ActiveWorkbook.Name
             }
-
             return {当前打开的文件名为:docName}
         }
 

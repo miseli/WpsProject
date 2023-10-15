@@ -1,3 +1,15 @@
+window.onload = () => {
+	var xmlReq = WpsInvoke.CreateXHR();
+	var url = location.origin + "/.debugTemp/NotifyDemoUrl"
+	xmlReq.open("GET", url);
+	xmlReq.onload = function(res) {
+		var node = document.getElementById("DemoSpan");
+		window.document.getElementById("DemoSpan").innerHTML = res.target.responseText;
+	};
+	xmlReq.send();
+}
+
+
 function onbuttonclick(idStr) {
 	if (typeof(wps.Enum) != "object") { // 如果没有内置枚举值
 		wps.Enum = WPS_Enum
@@ -55,31 +67,5 @@ function onbuttonclick(idStr) {
 				document.getElementById("text_p").innerHTML = textValue
 				break
 			}
-		case "backup":
-			{
-				备份当前Sheet()
-				break;
-			}
-		case "share":
-			{
-				重点检维修分享()
-				break;
-			}
-		case "获取尺寸":
-			{
-				获取尺寸()
-				break;
-			}
 	}
-}
-
-window.onload = () => {
-	var xmlReq = WpsInvoke.CreateXHR();
-	var url = location.origin + "/.debugTemp/NotifyDemoUrl"
-	xmlReq.open("GET", url);
-	xmlReq.onload = function(res) {
-		var node = document.getElementById("DemoSpan");
-		window.document.getElementById("DemoSpan").innerHTML = res.target.responseText;
-	};
-	xmlReq.send();
 }

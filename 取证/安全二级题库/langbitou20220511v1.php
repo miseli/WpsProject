@@ -48,6 +48,31 @@ $data = [
 		'textfile'=>'裂解(裂化)工艺作业(辽宁).txt',
 		'jsfile'=>'裂解(裂化)工艺作业(辽宁).js'
 	],
+	[
+		'title'=>'法规第三章',
+		'textfile'=>'注安法规第三章.txt',
+		'jsfile'=>'注安法规第三章.js'
+	],
+	[
+		'title'=>'法规第四章',
+		'textfile'=>'注安法规第四章.txt',
+		'jsfile'=>'注安法规第四章.js'
+	],
+	[
+		'title'=>'法规第五章',
+		'textfile'=>'注安法规第五章.txt',
+		'jsfile'=>'注安法规第五章.js'
+	],
+	[
+		'title'=>'法规第六章',
+		'textfile'=>'注安法规第六章.txt',
+		'jsfile'=>'注安法规第六章.js'
+	],
+	[
+		'title'=>'法规第七章',
+		'textfile'=>'注安法规第七章.txt',
+		'jsfile'=>'注安法规第七章.js'
+	],
 	// [
 		// 'title'=>'集团文化',
 		// 'textfile'=>'集团文化.txt',
@@ -77,6 +102,26 @@ $data = [
 		'title'=>'危险化学品经营-判断错',
 		'textfile'=>'危险化学品经营-判断错.txt',
 		'jsfile'=>'危险化学品经营-判断错.js'
+	],
+	[
+		'title'=>'基础知识法规300',
+		'textfile'=>'基础知识法规300.txt',
+		'jsfile'=>'基础知识法规300.js'
+	],
+	[
+		'title'=>'二级知识点257',
+		'textfile'=>'二级知识点257.txt',
+		'jsfile'=>'二级知识点257.js'
+	],
+	[
+		'title'=>'二级技能点35',
+		'textfile'=>'二级技能点35.txt',
+		'jsfile'=>'二级技能点35.js'
+	],
+	[
+		'title'=>'安全-应知应会',
+		'textfile'=>'安全-应知应会.txt',
+		'jsfile'=>'安全-应知应会.js'
 	],
 ];
 

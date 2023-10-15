@@ -12,6 +12,10 @@
 <script type="text/javascript" src="../.debugTemp/wpsjsrpcsdk.js"></script>
 <body>
     <div class="global">
+        <label>查找内容：<input id="searchkey" type="text"/></label>
+        <br/>
+        <label>替  换  为：<input id="replacekey" type="text"/></label>
+
 <!--         <div class="divItem">
             这是一个网页，按<span style="font-weight: bolder;">"F12"</span>可以打开调试器。
         </div>
@@ -24,38 +28,42 @@
         <div class="divItem">
             <!-- <button style="margin:3px;" onclick="onbuttonclick('dockRight')">停靠右边</button> -->
             <!-- <button style="margin:3px;" onclick="onbuttonclick('hideTaskPane')">隐藏TaskPane</button> -->
-            <button style="margin:3px;" onclick="onbuttonclick('getDocName')">风险研判</button>
-            <label>日期差值：<input id="date1" type="text"/></label>
-            <br/>
-            <button style="margin:3px;" onclick="onbuttonclick('addString')">作业统计</button>
-            <button style="margin:3px;" onclick="onbuttonclick('share')">重点检维修分享</button>
-            <button style="margin:3px;" onclick="onbuttonclick('backup')">备份当前Sheet</button>
-            <button style="margin:3px;" onclick="onbuttonclick('获取尺寸')">获取尺寸</button>
+            <!-- <button style="margin:3px;" onclick="onbuttonclick('getDocName')">风险研判</button> -->
             <div id="DemoSpan">
             </div>
         </div>
         <hr>
-        <div class="divItem">统计：<br/>
+        <div class="divItem">日志：<br/>
             <span id="text_p"></span>
         </div>
-        <a href="http://127.0.0.1:3889/ui/taskpane.html">调试</a>
+        <!-- <a href="http://127.0.0.1:3889/ui/taskpane.html">调试</a> -->
     </div>
 </body>
-
 <style>
-    .global{
+    .global {
         font-size: 15px;
         min-height: 95%;
     }
-    .divItem{
+    .divItem {
         margin-left: 5px;
         margin-bottom: 18px;
         font-size: 15px;
         word-wrap:break-word;
+        display: flex;
+        flex-direction: row;
     }
-    #text_p{
-        white-space: pre-line;
+    #text_p, #text_pp {
+        white-space: pre;
+        /*white-space: pre-line;*/
+        width: 50%;
+        /*overflow: scroll;*/
+    }
+    #text_p {
         user-select:all;
+    }
+    #text_pp {
+        font-size: 0.6rem;
+        font-family: fangsong;
     }
 </style>
 </html>

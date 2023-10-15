@@ -18,36 +18,44 @@
 <script type="text/javascript" src="../.debugTemp/wpsjsrpcsdk.js"></script>
 <body>
     <div class="global">
-        <!-- <div class="divItem">
+<!--         <div class="divItem">
             这是一个网页，按<span style="font-weight: bolder;">"F12"</span>可以打开调试器。
         </div>
         <div class="divItem">
             这个示例展示了wps加载项的相关基础能力，与B/S业务系统的交互，请用浏览器打开：
-            <span style="font-weight: bolder;color: slateblue;cursor:pointer" id="DemoSpan" onclick="shellExecuteByOAAssist(this.innerHTML)"></span>
+            <span style="font-weight: bolder;color: slateblue; cursor: pointer" id="DemoSpan" onclick="shellExecuteByOAAssist(this.innerHTML)"></span>
         </div>
-        <div class="divItem">开发文档: <span style="font-weight: bolder;color: slateblue;">https://open.wps.cn/docs/office</span></div> -->
-        <hr>
+        <div class="divItem">开发文档: <span style="font-weight: bolder;color: slateblue;">https://open.wps.cn/docs/office</span></div>
+        <hr> -->
         <div class="divItem">
-            <div>
+            <div style="width: 100%;">
                 <div class="buttons">
-                    <button  onclick="onbuttonclick('风险研判')">风险研判</button>
+                    <button data-action="风险研判" title="结果受是否审批影响"></button>
                     <label>日期差值：<input id="date1" type="text"/></label>
                     <br/>
-                    <button  onclick="onbuttonclick('addString')">统计作业</button>
-                    <button  onclick="onbuttonclick('重点检维修分享')">重点检维修分享</button>
-                    <button  onclick="onbuttonclick('检维修日表')">检维修日表</button>
-                    <button  onclick="onbuttonclick('备份当前Sheet')">备份当前Sheet</button>
-                    <!-- <button  onclick="onbuttonclick('打印设置')">打印设置</button> -->
-                    <!-- <button  onclick="onbuttonclick('获取尺寸')">获取尺寸</button> -->
+                    <button data-action="离线风险研判" title=""></button>
+                    <button data-action="导出" title="获取研判后用于导出Word"></button>
+                    <label>日期差值：<input id="date11" type="text"/></label>
                     <br/>
-                    <button  onclick="onbuttonclick('自动行高')">自动行高</button>
-                    <button  onclick="onbuttonclick('自动列宽')">自动列宽</button>
-                    <button  onclick="onbuttonclick('垂直水平居中自动换行')">垂直水平居中自动换行</button>
-                </div>
-                <div id="DemoSpan">
+                    <button data-action="统计" title="自动删除无特殊作业后统计"></button>
+                    <button data-action="统计作业" title="统计所有作业"></button>
+                    <button data-action="特殊作业" title="删除无特殊作业"></button>
+                    <button data-action="动火受限" title="删除非动火受限"></button>
+
+                    <button data-action="重点检维修分享" title="以及于丽娟发的表"></button>
+                    <button data-action="检维修日表" title="设置A4格式,不删除无特殊作业">检维修日表</button>
+                    <button data-action="备份工作表"></button>
+                    <br/>
+                    <button data-action="研判签到表"></button>
+                    <button data-action="统计属地车间"></button>
+                    <button data-action="统计作业单位"></button>
+                    <button data-action="自动行高"></button>
+                    <button data-action="自动列宽"></button>
+                    <button data-action="垂直水平居中自动换行"></button>
                 </div>
                 <span>http://127.0.0.1:3889/ui/dialog.html</span>
-                <span id="word_url"></span>
+                <br/>
+                <span id="word_url" onclick="shellExecuteByOAAssist(this.innerText)"></span>
             </div>
             <div>
 
@@ -79,16 +87,22 @@
         flex-direction: row;
     }
     #text_p, #text_pp {
-        white-space: pre-line;
+        white-space: pre;
+        /*white-space:nowrap;*/
+        /*white-space: pre-line;*/
         width: 50%;
         /*overflow: scroll;*/
     }
     #text_p {
         user-select:all;
+        /*text-overflow: ellipsis;*/
+        /*overflow: hidden;*/
     }
     #text_pp {
         font-size: 0.6rem;
         font-family: fangsong;
+        display: flex;
+        justify-content: flex-end;
     }
 </style>
 </html>
