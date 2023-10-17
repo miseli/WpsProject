@@ -122,10 +122,14 @@ var WPS_Enum = {
   xlPaperA4: 9,
   xlPageBreakPreview: 2,
   xlNormalView: 1,
-  xlLandscape: 2,
   //横向模式。
-  xlPortrait: 1,
+  xlLandscape: 2,
   //纵向模式。
+  xlPortrait: 1,
+  //随机筛选
+  xlAnd: 1,
+  //指定条件筛选
+  xlFilterValues: 7,
 }
 
 function GetUrlPath() {
@@ -479,10 +483,7 @@ function printformat(res, startTime, endTime, id) {
 }
 
 function 重点检维修分享() {
-  let curSheet = Application.ActiveSheet
-  let tbl = Application.Selection.CurrentRegion;
-  if (!tbl)
-    tbl = curSheet.Range("A2").CurrentRegion;
+  let {curSheet, tbl} = 获取有效表位置()
 
   curSheet.Range("A2").ColumnWidth = 2
   curSheet.Range("B2").ColumnWidth = 3.625
@@ -496,14 +497,10 @@ function 重点检维修分享() {
   curSheet.Range("O2").ColumnWidth = 14
 
   //清除内容
-  // curSheet.Range("L3:L" + (curSheet.Columns.CurrentRegion.Rows.Count)).ClearContents()
-  // curSheet.Range("M3:M" + (curSheet.Columns.CurrentRegion.Rows.Count)).ClearContents()
-  // curSheet.Range("N3:N" + (curSheet.Columns.CurrentRegion.Rows.Count)).ClearContents()
-  // curSheet.Range("O3:O" + (curSheet.Columns.CurrentRegion.Rows.Count)).ClearContents()
-  curSheet.Range("L3:O" + (curSheet.Columns.CurrentRegion.Rows.Count)).ClearContents()
-  curSheet.Range("O2").Formula = '移动监控\n架设情况'
-  curSheet.Range("O3:O" + (curSheet.Columns.CurrentRegion.Rows.Count)).Formula = 0
-  curSheet.Range("O3:O" + (curSheet.Columns.CurrentRegion.Rows.Count)).NumberFormatLocal = "[=1]\"☑\";[=0]\"☐\";0;@" //设置单元格自定义格式:[=1]"☑";[=0]"☐";0;@
+  curSheet.Range("L3:N" + (curSheet.Columns.CurrentRegion.Rows.Count)).ClearContents()
+  curSheet.Range("N2").Formula = '移动监控\n架设情况'
+  curSheet.Range("N3:N" + (curSheet.Columns.CurrentRegion.Rows.Count)).Formula = 0
+  curSheet.Range("N3:N" + (curSheet.Columns.CurrentRegion.Rows.Count)).NumberFormatLocal = "[=1]\"☑\";[=0]\"☐\";0;@" //设置单元格自定义格式:[=1]"☑";[=0]"☐";0;@
   // 数据有效性设置自定义公式:=IF(TRUE,OR(H2=0,H2=1),"Checkbox")
 
   debugger
@@ -514,10 +511,11 @@ function 重点检维修分享() {
   for (let i = 3, j = 0; i <= tbl.Rows.Count;) {
     let tmp = tbl.Rows.Item(i).Columns.Item("K").Text
 		// tbl.Rows.Item(i).Columns.Item("K").Select()
-		// return;
     // tbl.Rows.Item(i).Columns.Item("A").Value2 = ""
+
+    tbl.Rows.Item(i).Columns.Item("O").Value2 = /是/.test(tbl.Rows.Item(i).Columns.Item("O").Text)?1:0
+
     if (/(特级|受限)/.test(tmp)) {
-      // tbl.Rows.Item(i).Columns.Item("A").Value2 = "**"
       //涂黄
       背景填充(0x00ffff, tbl.Rows.Item(i))
     }
@@ -532,7 +530,19 @@ function 重点检维修分享() {
     i++
   }
 
-  curSheet.Range("C:C,D:D,F:F,H:H,N:N").Delete()
+  let title =
+  curSheet.Range('B1').UnMerge()
+  curSheet.Range("C:C,D:D,F:F,H:H").Delete()
+  curSheet.Range("C1:K1").Merge()
+  curSheet.Range('C1').Formula = curSheet.Range('B1').Formula
+  curSheet.Range("B:B").Delete()
+  debugger
+  //设置第二行自动筛选
+  curSheet.Rows.Item(2).AutoFilter(undefined, undefined, WPS_Enum.xlAnd, undefined, undefined)
+  // Formula 公式
+  // Value 单元格格式化 后 的值
+  // Value 单元格格式化 前 的值
+
   垂直水平居中自动换行(curSheet.Range("G3:I"))
   // 合并居中单元格(Application.ActiveSheet.Range('C1:J1'), Application.ActiveSheet.Range('B1').Value2)
   // curSheet.Columns.Item("H:H").Insert(-4159, undefined)
@@ -540,9 +550,31 @@ function 重点检维修分享() {
   // curSheet.Range("H2").Formula = "动火、受限作业票";
 }
 
+function 获取有效表位置(){
+  try{
+    let curSheet = Application.ActiveSheet
+    let tbl = Application.Selection.CurrentRegion;
+    if (!tbl || tbl.Rows.Count<=2){
+      for(let i=1; i<5; i++){
+        for(let j=1; j<10; j++){
+          if(/序号/.test(curSheet.Columns.Item(i).Rows.Item(j).Value2)){
+            curSheet.Columns.Item(i).Rows.Item(j).Select()
+            tbl = Application.Selection.CurrentRegion
+            console.log(i,j) //列,行
+            break
+          }
+        }
+      }
+    }
+    return {curSheet, tbl}
+  }catch(e){
+    debugger
+    return '不是wps环境'
+  }
+}
+
 function 检维修日表() {
-  let curSheet = Application.ActiveSheet
-  let tbl = curSheet.Range("A2").CurrentRegion
+  let {curSheet, tbl} = 获取有效表位置()
 
   //居中自动换行
   垂直水平居中自动换行(tbl)
@@ -578,6 +610,7 @@ function 检维修日表() {
   // tbl.Select()
 }
 
+
 /*本示例选定工作表 Sheet1 上的当前区域。*/
 function 选择表格有效区(sh = "Sheet1") {
   Application.Worksheets.Item(sh).Activate()
@@ -604,7 +637,7 @@ function 自动列宽() {
   Application.Selection.Columns.AutoFit();
 }
 
-function 统计() {
+function 接龙统计() {
   // alert('系统错误')
 	// return;
   let dict = {
@@ -622,11 +655,7 @@ function 统计() {
     "成品车间": 12
   }
 
-  // let tbl = 特殊作业()//删除无特殊作业
-  let curSheet = Application.ActiveSheet
-  let tbl = Application.Selection.CurrentRegion;
-  if (!tbl)
-    tbl = curSheet.Range("A2").CurrentRegion;
+  let {curSheet, tbl} = 获取有效表位置()
 
   let line = tbl.Rows.Count
   let s = '';
@@ -649,15 +678,20 @@ function 统计() {
   let ts = new Date(tbl.Rows.Item(line).Columns.Item("L").Text).format('yyyy-MM-dd')
   ts = new Date(ts).getTime()/1000
   let excel_url = 'http://localhost:8010/tp6/public/excel/get?n[]=' + Object.values(dict).join('&n[]=')+ `&outname=${outname}` + `&ts=${ts}`
-  $('#word_url').text(excel_url)
 
-  document.getElementById("text_p").innerText = (Object.keys(dict).join(',') + '\r\n' + excel_url + '\r\n' + s)
+  try{
+    $('#word_url').text('导出签到表')
+    $('#word_url').data('url', excel_url)
+    document.getElementById("text_p").innerText = (Object.keys(dict).join(',') + '\r\n' + excel_url + '\r\n' + s)
+  }catch(e){}
+  return s
+
   // document.getElementById("text_p").innerText = (Object.keys(dict).join(',') + '\r\n' + 'http://127.0.0.1:8010/excel.php?n[]=' + Object.values(dict).join('&n[]=')+ `&outname=${outname}` + `&ts=${ts}\r\n` + s)
   // shellExecuteByOAAssist('http://127.0.0.1:8010/excel.php?n[]=' + Object.values(dict).join('&n[]=') + `&outname=${outname}`)
   return tbl;
 }
 
-function 统计作业() {
+function 作业统计() {
   let curSheet = Application.ActiveSheet
   let tbl = Application.Selection.CurrentRegion;
   if (!tbl)
@@ -679,7 +713,11 @@ function 统计作业() {
 
 	let line = tbl.Rows.Count
 	let ts = new Date(tbl.Rows.Item(line).Columns.Item("L").Text).format('M月d日')
-  document.getElementById("text_p").innerText = `${ts}乙烯分公司重点关注危险作业：\r\n${s}`
+
+  try{
+    document.getElementById("text_p").innerText = `${ts}乙烯分公司重点关注危险作业：\r\n${s}`
+  }catch(e){}
+
   return tbl;
   // let curSheet = Application.EtApplication().ActiveSheet;
   // if (curSheet) {
@@ -698,15 +736,12 @@ function 统计作业() {
   //  }
 }
 
-async function 风险研判() {
+async function 线上风险研判() {
   $getWork(-1);
 }
 
 function 离线风险研判() {
-  let curSheet = Application.ActiveSheet
-  let tbl = Application.Selection.CurrentRegion;
-  if (!tbl)
-    tbl = curSheet.Range("A2").CurrentRegion;
+  let {curSheet, tbl} = 获取有效表位置()
 
   // if(tbl.Rows.Count==tbl.Columns.Count) 无作业
 
@@ -775,8 +810,8 @@ function 离线风险研判() {
   let starttime = new Date(tbl.Rows.Item(line).Columns.Item("K").Text)
   let word_url = `http://localhost:8010/tp6/public/index.php/word/exportWord?workdata[]=${a['动火特级']}&workdata[]=${a['动火一级']}&workdata[]=${a['动火二级']}&workdata[]=${a['受限']}&workdata[]=${a['盲板']}&workdata[]=${a['高处']}&workdata[]=${a['吊装']}&workdata[]=${a['临时用电']}&workdata[]=${a['动土']}&workdata[]=${a['断路']}&workdata[]=${a['无特殊']}&riqi=${starttime.getTime()/1000}`
   // let word_url = `http://127.0.0.1:8010/word.php?workdata[]=${a['动火特级']}&workdata[]=${a['动火一级']}&workdata[]=${a['动火二级']}&workdata[]=${a['受限']}&workdata[]=${a['盲板']}&workdata[]=${a['高处']}&workdata[]=${a['吊装']}&workdata[]=${a['临时用电']}&workdata[]=${a['动土']}&workdata[]=${a['断路']}&workdata[]=${a['无特殊']}&riqi=${starttime.getTime()/1000}`
-  $('#word_url').text(word_url)
-
+  $('#word_url').text('导出风险研判表')
+  $('#word_url').data('url', word_url)
 
   let tb = $('.cube')
   if (tb.length <= 0) {
@@ -835,19 +870,12 @@ function 统计属地车间() {
 }
 
 function 统计作业单位() {
-  alert(未完)
-}
-
-function 研判签到表() {
-  alert(未完)
+  alert('未完')
 }
 
 // 删除无特殊作业项目
 function 特殊作业(col = 'J', pattern_str = '无特殊作业') {
-  let curSheet = Application.ActiveSheet
-  let tbl = Application.Selection.CurrentRegion;
-  if (!tbl)
-    tbl = curSheet.Range("A2").CurrentRegion;
+  let {curSheet, tbl} = 获取有效表位置()
 
   //删掉"无特殊作业"行
   for (let i = 3; i <= tbl.Rows.Count;) {
@@ -864,10 +892,7 @@ function 特殊作业(col = 'J', pattern_str = '无特殊作业') {
 
 // 删除非动火受限项目
 function 动火受限(col = 'J', pattern_str = '(动火|受限)') {
-  let curSheet = Application.ActiveSheet
-  let tbl = Application.Selection.CurrentRegion;
-  if (!tbl)
-    tbl = curSheet.Range("A2").CurrentRegion;
+  let {curSheet, tbl} = 获取有效表位置()
 
   //保留动火受限行
   for (let i = 3; i <= tbl.Rows.Count;) {
@@ -888,6 +913,29 @@ function 动火受限(col = 'J', pattern_str = '(动火|受限)') {
     i++
   }
   return tbl
+}
+
+function 隐患统计() {
+  let {curSheet, tbl} = 获取有效表位置()
+
+  let s = '';
+  for (let i = 3, id = 1; i <= tbl.Rows.Count; id++,
+    i++) {
+    (obj => {
+      let wenti = '问题' + obj.Item('A').Text + ': ' + obj.Item("F").Text.replace(/[\r\n\t]/g, ','),
+        danwei = obj.Item("G").Text.replace(/[\r\n\t]/g, ','),
+        ren = obj.Item("K").Text.replace(/[\r\n\t]/g, ','),
+        cuoshi = obj.Item("P").Text.replace(/[\r\n\t]/g, ','),
+        shijian = obj.Item("S").Text.replace(/[\r\n\t]/g, ',')
+        shijian = new Date(shijian).toLocaleDateString()
+        s += `${wenti}\r\n问题单位: ${danwei}\r\n整改责任人: ${ren}\r\n整改措施: ${cuoshi}\r\n整改完成时间: ${shijian}\r\n整改前\t\t整改后\t\r\n`
+    })(tbl.Rows.Item(i).Columns)
+  }
+  try{
+    // s += '模板在: cube123.cn/tp6/public/隐患图册模板.docx\r\n\r\n' + s
+    document.getElementById("text_p").innerText = s
+  }catch(e){}
+  return s
 }
 
 $AddCss('../js/style.css')

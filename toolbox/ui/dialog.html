@@ -28,37 +28,38 @@
         <div class="divItem">开发文档: <span style="font-weight: bolder;color: slateblue;">https://open.wps.cn/docs/office</span></div>
         <hr> -->
         <div class="divItem">
-            <div style="width: 100%;">
+            <div class="left">
                 <div class="buttons">
-                    <button data-action="风险研判" title="结果受是否审批影响"></button>
-                    <label>日期差值：<input id="date1" type="text"/></label>
-                    <br/>
+<!--                     <button data-action="线上风险研判" title="结果受是否审批影响"></button>
+                    <label>日期差值：<input id="date1" type="text"/></label> -->
+                    <!-- <br/> -->
                     <button data-action="离线风险研判" title=""></button>
-                    <button data-action="导出" title="获取研判后用于导出Word"></button>
                     <label>日期差值：<input id="date11" type="text"/></label>
                     <br/>
-                    <button data-action="统计" title="自动删除无特殊作业后统计"></button>
-                    <button data-action="统计作业" title="统计所有作业"></button>
+                    <button data-action="隐患统计" title="统计隐患图册内容"></button>
+                    <button data-action="接龙统计" title="自动删除无特殊作业后统计"></button>
+                    <button data-action="作业统计" title="统计所有作业"></button>
+                    <br/>
+                    <!-- <button data-action="研判签到表"></button> -->
+                    <!-- <button data-action="统计属地车间"></button> -->
+                    <!-- <button data-action="统计作业单位"></button> -->
+                    <!-- <button data-action="自动行高"></button> -->
+                    <!-- <button data-action="自动列宽"></button> -->
+                    <!-- <button data-action="垂直水平居中自动换行"></button> -->
+                </div>
+                <span style="color: gray">http://127.0.0.1:3889/ui/dialog.html</span>
+                <br/>
+                <span id="word_url" onclick="shellExecuteByOAAssist(this.dataset.url)"></span>
+            </div>
+            <div class="right">
+                <div class="buttons">
                     <button data-action="特殊作业" title="删除无特殊作业"></button>
                     <button data-action="动火受限" title="删除非动火受限"></button>
-
-                    <button data-action="重点检维修分享" title="以及于丽娟发的表"></button>
                     <button data-action="检维修日表" title="设置A4格式,不删除无特殊作业">检维修日表</button>
-                    <button data-action="备份工作表"></button>
                     <br/>
-                    <button data-action="研判签到表"></button>
-                    <button data-action="统计属地车间"></button>
-                    <button data-action="统计作业单位"></button>
-                    <button data-action="自动行高"></button>
-                    <button data-action="自动列宽"></button>
-                    <button data-action="垂直水平居中自动换行"></button>
+                    <button data-action="重点检维修分享" title="以及于丽娟发的表"></button>
+                    <button data-action="备份工作表"></button>
                 </div>
-                <span>http://127.0.0.1:3889/ui/dialog.html</span>
-                <br/>
-                <span id="word_url" onclick="shellExecuteByOAAssist(this.innerText)"></span>
-            </div>
-            <div>
-
             </div>
         </div>
         <div class="cube">
@@ -86,6 +87,24 @@
         display: flex;
         flex-direction: row;
     }
+
+    .left, .right{
+        width: 50%;
+        padding: 10px;
+    }
+
+    div.right{
+        border-left: 2px solid red;
+    }
+
+    #word_url{
+        background-color: #0c0;color: #fff;line-height: 18px;cursor: pointer;
+    }
+
+    #date11{
+        width: 100px;
+    }
+
     #text_p, #text_pp {
         white-space: pre;
         /*white-space:nowrap;*/
