@@ -681,7 +681,7 @@ function 接龙统计() {
 
   try{
     $('#word_url').text('导出签到表')
-    $('#word_url').data('url', excel_url)
+    $('#word_url')[0].dataset.url = excel_url
     document.getElementById("text_p").innerText = (Object.keys(dict).join(',') + '\r\n' + excel_url + '\r\n' + s)
   }catch(e){}
   return s
@@ -811,7 +811,7 @@ function 离线风险研判() {
   let word_url = `http://localhost:8010/tp6/public/index.php/word/exportWord?workdata[]=${a['动火特级']}&workdata[]=${a['动火一级']}&workdata[]=${a['动火二级']}&workdata[]=${a['受限']}&workdata[]=${a['盲板']}&workdata[]=${a['高处']}&workdata[]=${a['吊装']}&workdata[]=${a['临时用电']}&workdata[]=${a['动土']}&workdata[]=${a['断路']}&workdata[]=${a['无特殊']}&riqi=${starttime.getTime()/1000}`
   // let word_url = `http://127.0.0.1:8010/word.php?workdata[]=${a['动火特级']}&workdata[]=${a['动火一级']}&workdata[]=${a['动火二级']}&workdata[]=${a['受限']}&workdata[]=${a['盲板']}&workdata[]=${a['高处']}&workdata[]=${a['吊装']}&workdata[]=${a['临时用电']}&workdata[]=${a['动土']}&workdata[]=${a['断路']}&workdata[]=${a['无特殊']}&riqi=${starttime.getTime()/1000}`
   $('#word_url').text('导出风险研判表')
-  $('#word_url').data('url', word_url)
+  $('#word_url')[0].dataset.url = word_url
 
   let tb = $('.cube')
   if (tb.length <= 0) {
