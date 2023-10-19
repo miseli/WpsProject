@@ -742,7 +742,10 @@ async function 线上风险研判() {
 
 function 离线风险研判() {
   let {curSheet, tbl} = 获取有效表位置()
+  let logmsg = ''
+  let checkfun = (text)=>{
 
+  }
   // if(tbl.Rows.Count==tbl.Columns.Count) 无作业
 
   let line = tbl.Rows.Count
@@ -757,20 +760,45 @@ function 离线风险研判() {
     let person = tbl.Rows.Item(i).Columns.Item("N").Text
     let jiezhi = tbl.Rows.Item(i).Columns.Item("G").Text
     let jibie = tbl.Rows.Item(i).Columns.Item("J").Text
-    let start_t = tbl.Rows.Item(i).Columns.Item("K").Text
-    let end_t = tbl.Rows.Item(i).Columns.Item("L").Text
-    new Date(end_t).getHours()>=18 && new Date(start_t).getHours()<=8
+    let start_t = tbl.Rows.Item(i).Columns.Item("K").Text.replaceAll('-','/')
+    let end_t = tbl.Rows.Item(i).Columns.Item("L").Text.replaceAll('-','/')
 
     //标记错误行为红色
-    if(person.length<4 || (!/(是|否)/.test(person) && /火/.test(jibie))/*动火作业的备注栏中有无是否*/ || (/无/.test(jiezhi) && /火/.test(jibie))/*动火作业的介质栏中不允许填无*/){
-    	背景填充(0x0000ff, tbl.Rows.Item(i))
+    if(person.length<4 || (/火/.test(jibie) && ( !/(是|否)/.test(person) || /无/.test(jiezhi) || /[\r\n]/.test(person) ||(new Date(end_t).getHours()>=18 || new Date(start_t).getHours()<8 || (new Date(end_t).getDate() != new Date(start_t).getDate()) || new Date(end_t).getTime()<= new Date(start_t).getTime())))){
+
+      背景填充(0x0000ff, tbl.Rows.Item(i)) //涂红
+
       //标记具体哪个单元格错误
-	    if((/无/.test(jiezhi) && /火/.test(jibie))){
-	    	背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('G'))
-	    }
-	    if(person.length<4 || !/(是|否)/.test(person)){
-	    	背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('N'))
-	    }
+      if((/无/.test(jiezhi) && /火/.test(jibie))){
+        背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('G'))
+        logmsg = `${logmsg}G${i}：介质不允许填无\r\n`
+      }
+      if(person.length<4 || !/(是|否)/.test(person)){
+        背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('N'))
+        logmsg = `${logmsg}N${i}：没有备注是否录像\r\n`
+      }
+
+      if(/[\r\n]/.test(person)){
+        背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('N'))
+        logmsg = `${logmsg}N${i}：备注栏中有换行\r\n`
+      }
+
+      if(new Date(end_t).getHours()>=18){
+        背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('L'))
+        logmsg = `${logmsg}L${i}：时间超限\r\n`
+      }
+      if(new Date(start_t).getHours()<8){
+        背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('K'))
+        logmsg = `${logmsg}K${i}：时间超限\r\n`
+      }
+      if(new Date(end_t).getDate() != new Date(start_t).getDate()){
+        背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('K:L'))
+        logmsg = `${logmsg}K${i}L${i}：日期不合规\r\n`
+      }
+      if(new Date(end_t).getTime()<= new Date(start_t).getTime()){
+        背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('K:L'))
+        logmsg = `${logmsg}K${i}L${i}：开始时间晚于结束时间\r\n`
+      }
     }
 
   }
@@ -812,6 +840,7 @@ function 离线风险研判() {
   // let word_url = `http://127.0.0.1:8010/word.php?workdata[]=${a['动火特级']}&workdata[]=${a['动火一级']}&workdata[]=${a['动火二级']}&workdata[]=${a['受限']}&workdata[]=${a['盲板']}&workdata[]=${a['高处']}&workdata[]=${a['吊装']}&workdata[]=${a['临时用电']}&workdata[]=${a['动土']}&workdata[]=${a['断路']}&workdata[]=${a['无特殊']}&riqi=${starttime.getTime()/1000}`
   $('#word_url').text('导出风险研判表')
   $('#word_url')[0].dataset.url = word_url
+  $('#text_p').text(logmsg)
 
   let tb = $('.cube')
   if (tb.length <= 0) {
@@ -820,43 +849,43 @@ function 离线风险研判() {
   }
 
   tb.html(`
-			<table style="text-align: center; width: 100%;" border="1">
-				<thead>
-					<tr class="header">
-						<th>合计</th>
-						<th>日期</th>
-						<th>动火特级</th>
-						<th>动火一级</th>
-						<th>动火二级</th>
-						<th>受限空间</th>
-						<th class="tag" style="border-left: solid red 2px;">盲板</th>
-						<th>高处</th>
-						<th>吊装</th>
-						<th>临时用电</th>
-						<th class="tag" style="border-left: solid red 2px;">动土</th>
-						<th>断路</th>
-						<th>检维修</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<td>${heji}</td>
-						<td>${riqi}</td>
-						<td>${a['动火特级']}</td>
-						<td>${a['动火一级']}</td>
-						<td>${a['动火二级']}</td>
-						<td>${a['受限']}</td>
-						<td class="tag" style="border-left: solid red 2px;">${a['盲板']}</td>
-						<td>${a['高处']}</td>
-						<td>${a['吊装']}</td>
-						<td>${a['临时用电']}</td>
-						<td class="tag" style="border-left: solid red 2px;">${a['动土']}</td>
-						<td>${a['断路']}</td>
-						<td>${a['无特殊']}</td>
-					</tr>
-				</tbody>
-			</table>
-		`)
+      <table style="text-align: center; width: 100%;" border="1">
+        <thead>
+          <tr class="header">
+            <th>合计</th>
+            <th>日期</th>
+            <th>动火特级</th>
+            <th>动火一级</th>
+            <th>动火二级</th>
+            <th>受限空间</th>
+            <th class="tag" style="border-left: solid red 2px;">盲板</th>
+            <th>高处</th>
+            <th>吊装</th>
+            <th>临时用电</th>
+            <th class="tag" style="border-left: solid red 2px;">动土</th>
+            <th>断路</th>
+            <th>检维修</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>${heji}</td>
+            <td>${riqi}</td>
+            <td>${a['动火特级']}</td>
+            <td>${a['动火一级']}</td>
+            <td>${a['动火二级']}</td>
+            <td>${a['受限']}</td>
+            <td class="tag" style="border-left: solid red 2px;">${a['盲板']}</td>
+            <td>${a['高处']}</td>
+            <td>${a['吊装']}</td>
+            <td>${a['临时用电']}</td>
+            <td class="tag" style="border-left: solid red 2px;">${a['动土']}</td>
+            <td>${a['断路']}</td>
+            <td>${a['无特殊']}</td>
+          </tr>
+        </tbody>
+      </table>
+    `)
   return s;
 }
 
@@ -936,6 +965,11 @@ function 隐患统计() {
     document.getElementById("text_p").innerText = s
   }catch(e){}
   return s
+}
+
+
+function 卡具统计() {
+  let {curSheet, tbl} = 获取有效表位置()
 }
 
 $AddCss('../js/style.css')
