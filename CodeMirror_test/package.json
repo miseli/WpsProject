@@ -1,0 +1,23 @@
+{
+  "name": "codemirror_test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rollup src/editor.mjs -f iife -o dist/codemirror.bundle.js -p @rollup/plugin-node-resolve",
+    "build_by_config": "rollup -c"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@codemirror/lang-javascript": "^6.2.1",
+    "@codemirror/view": "^6.22.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "codemirror": "^6.0.1",
+    "rollup": "^4.3.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

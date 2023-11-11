@@ -1,0 +1,60 @@
+<!--
+* @Author: Cube
+* @Date:   2023-11-08 20:52:01
+* @Last Modified by:   Cube
+* @Last Modified time: 2023-11-10 07:57:40
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script src="codemirror.bundle.js"></script>
+    <script>
+        let editor = CodeMirror({
+            BlankLineNums: 0
+        })
+    </script>
+</body>
+</html>
+
+
+    let editor = CodeMirror(document.getElementById("text_p"), {
+    // let editor = CodeMirror.fromTextArea(document.getElementById("myTextarea"), {
+        value: `let abc = 123\r\n456`,
+        // 显示行数
+        line: true,
+        lineNumbers: true,
+        // 软换行
+        lineWrapping: true,
+        // 文本选中时显示光标
+        showCursorWhenSelecting: true,
+        // lineNumberFormatter(n, cm){
+        //  console.log(n)
+        //  return n;
+        //  // return n + '**'
+        // },
+        mode: 'javascript',
+        gutters: [
+            'CodeMirror-linenumbers'
+        ],
+        // 智能提示
+    extraKeys: {
+        "Alt-/": "autocomplete",
+        F10(cm) {
+                alert(123)
+            cm.setOption("fullScreen", !cm.getOption("fullScreen"));
+        }
+    }
+    })
+    // editor.setValue(`let abc = 123\r\n456`)
+    // editor.doc.on('change',function(doc, op){
+    //      let text = editor.doc.getLine(editor.doc.getCursor().line)
+    //      console.log(text)
+    // })
+  editor.doc.eachLine(0,editor.doc.size,function(line){
+      console.log(line)
+  })

@@ -1,69 +1,157 @@
+<!--
+* @Author: Cube
+* @Date: 2022-12-10
+* @LastEditTime: 2022-12-10
+-->
 <!DOCTYPE html>
 <html>
+
 <head>
-    <meta charset="utf-8">
-<!--     <link rel="stylesheet" href="../js/layui.css" type="text/css" media="all">
-    <link rel="stylesheet" href="../js/webframecss@v=1.0.0.css" type="text/css" media="all"> -->
+	<title>风险研判</title>
+	<meta charset="utf-8">
+	<!--     <link rel="stylesheet" href="../js/layui.css" type="text/css" media="all">
+<link rel="stylesheet" href="../js/webframecss@v=1.0.0.css" type="text/css" media="all"> -->
+	<link rel="stylesheet" href="../js/codemirror.min.css" type="text/css" media="all">
 </head>
 <script type="text/javascript" src="../js/jquery.min.js"></script>
 <script type="text/javascript" src="../js/axios.min.js"></script>
+<script type="text/javascript" src="../js/codemirror.bundle.js"></script>
 <script type="text/javascript" src="../js/util.js"></script>
-<script type="text/javascript" src="../js/taskpane.js"></script>
+<script type="text/javascript" src="../js/dialog.js"></script>
 <script type="text/javascript" src="../.debugTemp/wpsjsrpcsdk.js"></script>
-<body>
-    <div class="global">
-        <label>查找内容：<input id="searchkey" type="text"/></label>
-        <br/>
-        <label>替  换  为：<input id="replacekey" type="text"/></label>
 
-<!--         <div class="divItem">
-            这是一个网页，按<span style="font-weight: bolder;">"F12"</span>可以打开调试器。
-        </div>
-        <div class="divItem">
-            这个示例展示了wps加载项的相关基础能力，与B/S业务系统的交互，请用浏览器打开：
-            <span style="font-weight: bolder;color: slateblue;cursor:pointer" id="DemoSpan" onclick="shellExecuteByOAAssist(this.innerHTML)"></span>
-        </div>
-        <div class="divItem">开发文档: <span style="font-weight: bolder;color: slateblue;">https://open.wps.cn/docs/office</span></div>
-        <hr> -->
-        <div class="divItem">
-            <!-- <button style="margin:3px;" onclick="onbuttonclick('dockRight')">停靠右边</button> -->
-            <!-- <button style="margin:3px;" onclick="onbuttonclick('hideTaskPane')">隐藏TaskPane</button> -->
-            <!-- <button style="margin:3px;" onclick="onbuttonclick('getDocName')">风险研判</button> -->
-            <div id="DemoSpan">
-            </div>
-        </div>
-        <hr>
-        <div class="divItem">日志：<br/>
-            <span id="text_p"></span>
-        </div>
-        <!-- <a href="http://127.0.0.1:3889/ui/taskpane.html">调试</a> -->
-    </div>
+<body>
+	<div class="global">
+<!--
+		<div class="divItem">
+			这是一个网页，按<span style="font-weight: bolder;">"F12"</span>可以打开调试器。
+		</div>
+		<div class="divItem">
+			这个示例展示了wps加载项的相关基础能力，与B/S业务系统的交互，请用浏览器打开：
+			<span style="font-weight: bolder;color: slateblue; cursor: pointer" id="DemoSpan" onclick="shellExecuteByOAAssist(this.innerHTML)"></span>
+		</div>
+		<div class="divItem">开发文档: <span style="font-weight: bolder;color: slateblue;">https://open.wps.cn/docs/office</span>
+		</div>
+ -->
+		<hr>
+		<div class="divItem">
+			<div class="left">
+				<div class="buttons">
+					<!--                     <button data-action="线上风险研判" title="结果受是否审批影响"></button>
+<label>日期差值：<input id="date1" type="text"/></label> -->
+					<!-- <br/> -->
+					<button data-action="离线风险研判" title=""></button>
+					<label>日期差值：<input id="date11" type="text" /></label>
+					<br />
+					<!-- <button data-action="隐患统计" title="统计隐患图册内容"></button> -->
+					<button data-action="接龙统计" title="自动删除无特殊作业后统计"></button>
+					<button data-action="作业统计" title="统计所有作业"></button>
+					<!-- <button data-action="卡具统计" title="统计卡具台账"></button> -->
+					<br />
+					<!-- <button data-action="研判签到表"></button> -->
+					<!-- <button data-action="统计属地车间"></button> -->
+					<!-- <button data-action="统计作业单位"></button> -->
+					<!-- <button data-action="自动行高"></button> -->
+					<!-- <button data-action="自动列宽"></button> -->
+					<!-- <button data-action="垂直水平居中自动换行"></button> -->
+				</div>
+				<span style="color: gray" onclick="shellExecuteByOAAssist(this.innerText)">http://127.0.0.1:3889/ui/dialog.html</span>
+				<br />
+				<span id="word_url" onclick="shellExecuteByOAAssist(this.dataset.url)"></span>
+			</div>
+			<div class="right">
+				<div class="buttons">
+					<button data-action="特殊作业" title="删除无特殊作业"></button>
+					<button data-action="动火受限" title="删除非动火受限"></button>
+					<button data-action="检维修日表" title="设置A4格式,不删除无特殊作业">检维修日表</button>
+					<br />
+					<button data-action="重点检维修分享" title="以及于丽娟发的表"></button>
+					<button data-action="备份工作表"></button>
+				</div>
+			</div>
+		</div>
+		<div class="cube" title="风险研判表">
+		</div>
+		<hr>
+		<div class="divItem">
+			<span id="log_text">
+			</span>
+			<div class="child">
+				<span id="text_p1" class="left">
+				</span>
+				<span id="text_p2" class="rigth">
+				</span>
+			</div>
+		</div>
+	</div>
 </body>
 <style>
-    .global {
-        font-size: 15px;
-        min-height: 95%;
-    }
-    .divItem {
-        margin-left: 5px;
-        margin-bottom: 18px;
-        font-size: 15px;
-        word-wrap:break-word;
-        display: flex;
-        flex-direction: row;
-    }
-    #text_p, #text_pp {
-        white-space: pre;
-        /*white-space: pre-line;*/
-        width: 50%;
-        /*overflow: scroll;*/
-    }
-    #text_p {
-        user-select:all;
-    }
-    #text_pp {
-        font-size: 0.6rem;
-        font-family: fangsong;
-    }
+.global {
+	font-size: 15px;
+	min-height: 95%;
+}
+
+.divItem {
+	margin-left: 5px;
+	margin-bottom: 18px;
+	font-size: 15px;
+	word-wrap: break-word;
+	display: flex;
+	flex-direction: row;
+}
+
+.child {
+	display: flex;
+	/*width: 50%;*/
+}
+
+div.left,
+div.right {
+	width: 50%;
+	padding: 10px;
+}
+
+div.right {
+	border-left: 2px solid red;
+}
+
+#word_url {
+	background-color: #009688;
+	color: #fff;
+	line-height: 18px;   cursor: pointer;
+	border-radius: 4px;
+}
+
+#date11 {
+	width: 100px;
+}
+
+#text_p1,
+#text_p2,
+#log_text {
+	white-space: pre;
+	/*white-space:nowrap;*/
+	/*white-space: pre-line;*/
+	/*width: 50%;*/
+	/*overflow: scroll;*/
+}
+
+#text_p1 {
+	user-select: all;
+	/*text-overflow: ellipsis;*/
+	/*overflow: hidden;*/
+}
+
+#text_p2 i{
+	cursor: pointer;
+}
+
+#log_text {
+	font-size: 0.6rem;
+	font-family: fangsong;
+	display: flex;
+	justify-content: flex-end;
+}
 </style>
+
 </html>

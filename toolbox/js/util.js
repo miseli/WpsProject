@@ -1,3 +1,7 @@
+// Formula 公式
+// Value 单元格格式化 后 的值
+// Value 单元格格式化 前 的值
+
 /**
  * 原型链上添加日期格式化自定义
  * 格式化日期类型 自定义函数来格式化时间
@@ -39,7 +43,7 @@ const events = {
       return
     }
     textValue = textValue + doc.Name
-    document.getElementById("text_p").innerHTML = textValue
+    document.getElementById("text_p2").innerHTML = textValue
   },
   "createTaskPane": () => {
     let tsId = Application.PluginStorage.getItem("taskpane_id")
@@ -148,6 +152,28 @@ function shellExecuteByOAAssist(param) {
   }
 }
 
+function 获取有效表位置(){
+  try{
+    let curSheet = Application.ActiveSheet
+    let tbl = Application.Selection.CurrentRegion;
+    // if (!tbl || tbl.Rows.Count<=2){
+      for(let i=1; i<5; i++){
+        for(let j=1; j<10; j++){
+          if(/序号/.test(curSheet.Columns.Item(i).Rows.Item(j).Value2)){
+            curSheet.Columns.Item(i).Rows.Item(j).Select()
+            tbl = Application.Selection.CurrentRegion
+            console.log(i,j) //列,行
+            return {curSheet, tbl, row: j, col: i}
+          }
+        }
+      }
+    // }
+  }catch(e){
+    debugger
+    return '不是wps环境'
+  }
+}
+
 function 合并居中单元格(obj, txt) {
   obj.UnMerge();
   obj.Merge(false);
@@ -158,10 +184,18 @@ function 合并居中单元格(obj, txt) {
 }
 
 function 获取尺寸() {
+  let curSheet = Application.ActiveSheet
+  let s = ''
+  for(let i = 0; i<79-65; i++){
+      let o = String.fromCharCode(i+65)
+      let w = curSheet.Range(o + 2).ColumnWidth
+      s += `curSheet.Range("${o}2").ColumnWidth = ${w}\r\n`
+  }
+
+  document.getElementById("text_p2").innerText += Application.Selection.Width + 'x' + Application.Selection.Height + '\r\n'
+
   debugger
   return
-  document.getElementById("text_p").innerText += Application.Selection.Width + 'x' + Application.Selection.Height + '\r\n'
-  let curSheet = Application.ActiveSheet
   合并居中单元格(Application.ActiveSheet.Range('A1:A3'), '序号')
   合并居中单元格(Application.ActiveSheet.Range('B1:B3'), '车间')
   合并居中单元格(Application.ActiveSheet.Range('C1:C3'), '作业项目名称')
@@ -297,7 +331,7 @@ Date.prototype.DateAdd = function(interval, number) {
 }
 
 async function $getWork(n) {
-  $('#text_pp').text('')
+  $('#log_text').text('')
   let host = '192.168.1.102',
     protocol = 'http',
     port = 4480
@@ -345,8 +379,8 @@ async function $getWork(n) {
     let r = rs[id]
     r.then(function(res) {
       printformat(res.data, startTime, endTime, id)
-      let t = $('#text_pp').text()
-      $('#text_pp').text('成功' + urls[id] + '\r\n' + t)
+      let t = $('#log_text').text()
+      $('#log_text').text('成功' + urls[id] + '\r\n' + t)
       sources.map((source, i) => {
         if (i != id) {
           source.cancel('1111', i)
@@ -355,8 +389,8 @@ async function $getWork(n) {
     }).catch(err => {
       console.log(id)
       sources[id].cancel('没有通路', id)
-      let t = $('#text_pp').text()
-      $('#text_pp').text(t + urls[id] + ' ' + err + '\r\n')
+      let t = $('#log_text').text()
+      $('#log_text').text(t + urls[id] + ' ' + err + '\r\n')
     })
   }
 }
@@ -485,16 +519,15 @@ function printformat(res, startTime, endTime, id) {
 function 重点检维修分享() {
   let {curSheet, tbl} = 获取有效表位置()
 
-  curSheet.Range("A2").ColumnWidth = 2
-  curSheet.Range("B2").ColumnWidth = 3.625
-  curSheet.Range("E2").ColumnWidth = 15
-  curSheet.Range("G2").ColumnWidth = 28.25
-  curSheet.Range("I2").ColumnWidth = 11.25
-  curSheet.Range("J2").ColumnWidth = 19.375
-  curSheet.Range("K2").ColumnWidth = 9.625
-  curSheet.Range("L2").ColumnWidth = 14
-  curSheet.Range("M2").ColumnWidth = 14
-  curSheet.Range("O2").ColumnWidth = 14
+  curSheet.Range("E2").ColumnWidth = 13.366666793823242
+  curSheet.Range("G2").ColumnWidth = 28.375
+  curSheet.Range("I2").ColumnWidth = 11.625
+  curSheet.Range("J2").ColumnWidth = 14.858333587646484
+  curSheet.Range("K2").ColumnWidth = 12.008333206176758
+  curSheet.Range("L2").ColumnWidth = 16.625
+  curSheet.Range("M2").ColumnWidth = 17
+  curSheet.Range("N2").ColumnWidth = 5.074999809265137
+  curSheet.Range("O2").ColumnWidth = 5.75
 
   //清除内容
   curSheet.Range("L3:N" + (curSheet.Columns.CurrentRegion.Rows.Count)).ClearContents()
@@ -503,7 +536,6 @@ function 重点检维修分享() {
   curSheet.Range("N3:N" + (curSheet.Columns.CurrentRegion.Rows.Count)).NumberFormatLocal = "[=1]\"☑\";[=0]\"☐\";0;@" //设置单元格自定义格式:[=1]"☑";[=0]"☐";0;@
   // 数据有效性设置自定义公式:=IF(TRUE,OR(H2=0,H2=1),"Checkbox")
 
-  debugger
   //居中自动换行
   垂直水平居中自动换行(tbl)
 
@@ -530,47 +562,22 @@ function 重点检维修分享() {
     i++
   }
 
-  let title =
   curSheet.Range('B1').UnMerge()
   curSheet.Range("C:C,D:D,F:F,H:H").Delete()
   curSheet.Range("C1:K1").Merge()
   curSheet.Range('C1').Formula = curSheet.Range('B1').Formula
   curSheet.Range("B:B").Delete()
-  debugger
+
   //设置第二行自动筛选
   curSheet.Rows.Item(2).AutoFilter(undefined, undefined, WPS_Enum.xlAnd, undefined, undefined)
-  // Formula 公式
-  // Value 单元格格式化 后 的值
-  // Value 单元格格式化 前 的值
 
   垂直水平居中自动换行(curSheet.Range("G3:I"))
+
+
   // 合并居中单元格(Application.ActiveSheet.Range('C1:J1'), Application.ActiveSheet.Range('B1').Value2)
   // curSheet.Columns.Item("H:H").Insert(-4159, undefined)
   // curSheet.Range("H2").ColumnWidth = 20
   // curSheet.Range("H2").Formula = "动火、受限作业票";
-}
-
-function 获取有效表位置(){
-  try{
-    let curSheet = Application.ActiveSheet
-    let tbl = Application.Selection.CurrentRegion;
-    if (!tbl || tbl.Rows.Count<=2){
-      for(let i=1; i<5; i++){
-        for(let j=1; j<10; j++){
-          if(/序号/.test(curSheet.Columns.Item(i).Rows.Item(j).Value2)){
-            curSheet.Columns.Item(i).Rows.Item(j).Select()
-            tbl = Application.Selection.CurrentRegion
-            console.log(i,j) //列,行
-            break
-          }
-        }
-      }
-    }
-    return {curSheet, tbl}
-  }catch(e){
-    debugger
-    return '不是wps环境'
-  }
 }
 
 function 检维修日表() {
@@ -579,16 +586,35 @@ function 检维修日表() {
   //居中自动换行
   垂直水平居中自动换行(tbl)
 
+  curSheet.Range("A2").ColumnWidth = 3.25
+  curSheet.Range("B2").ColumnWidth = 4.5
+  curSheet.Range("C2").ColumnWidth = 9.875
+  curSheet.Range("D2").ColumnWidth = 16.625
+  curSheet.Range("E2").ColumnWidth = 8.375
+  curSheet.Range("F2").ColumnWidth = 17.375
+  curSheet.Range("G2").ColumnWidth = 28.375
+  curSheet.Range("H2").ColumnWidth = 8.375
+  curSheet.Range("I2").ColumnWidth = 11.625
+  curSheet.Range("J2").ColumnWidth = 12.75
+  curSheet.Range("K2").ColumnWidth = 9.625
+  curSheet.Range("L2").ColumnWidth = 16.625
+  curSheet.Range("M2").ColumnWidth = 17
+  curSheet.Range("N2").ColumnWidth = 9.875
+  curSheet.Range("O2").Width = 4.5
+
   //删掉无特殊作业行
   for (let i = 3, j = 0; i <= tbl.Rows.Count;) {
     let tmp = tbl.Rows.Item(i).Columns.Item("K").Text
 
-    if(/无特殊/g.test(tmp)){
-	    tbl.Rows.Item(i).Delete()
-	    continue
-    }
+    // 修改备注栏
+    let beizhu = tbl.Rows.Item(i).Columns.Item("O").Text
+    tbl.Rows.Item(i).Columns.Item("O").Value2 = /是/.test(beizhu)?'是':'否'
+    // if(/无特殊/g.test(tmp)){
+	   //  tbl.Rows.Item(i).Delete()
+	   //  continue //删除操作后,后面的行或者列前移,位置发生变化; j是用来编辑新序号的
+    // }
 
-    if (/(动火|受限)/g.test(tmp)) {
+    if (/(动火|受限|高处四级)/g.test(tmp)) {
       背景填充(0x00ffff, tbl.Rows.Item(i))
     }
 
@@ -599,9 +625,10 @@ function 检维修日表() {
     i++
   }
 
-  curSheet.Range("A:A,C:C,L:L,M:M").EntireColumn.Hidden = true
+  curSheet.Range("A:A,C:C,L:L,M:M,F:F").EntireColumn.Hidden = true
   curSheet.PageSetup.Orientation = WPS_Enum.xlLandscape
   curSheet.PageSetup.Zoom = 100;
+
   // curSheet.PrintPreview(undefined);
   // curSheet.Columns.Item("G:G").Insert(-4159, undefined)
   // curSheet.Range("G2").ColumnWidth = 28.125
@@ -670,7 +697,8 @@ function 接龙统计() {
       delete dict[obj.Item("D").Text.replace(/[\r\n\t,，]/g, '')]
       let tmp = `${level.replace(/[^火受盲高吊临土断无]/g, '')}-` + workshop + workname
 			tmp = tmp.replace(/[ *]/g,'')
-      s += id + (tmp.length > 20 ? `*${tmp.length - 20}` : '') + '\t\t' + tmp + '\r\n'
+      // s += id + (tmp.length > 20 ? `*${tmp.length - 20}` : '') + '\t\t' + tmp + '\r\n'
+      s += tmp + '\r\n'
     })(tbl.Rows.Item(i).Columns)
   }
 
@@ -682,7 +710,13 @@ function 接龙统计() {
   try{
     $('#word_url').text('导出签到表')
     $('#word_url')[0].dataset.url = excel_url
-    document.getElementById("text_p").innerText = (Object.keys(dict).join(',') + '\r\n' + excel_url + '\r\n' + s)
+    document.getElementById("text_p1").innerText = excel_url
+    let editor = CodeMirror({
+      parent: document.getElementById("text_p1"),
+      doc: Object.keys(dict).join(',') + '\r\n' + excel_url + '\r\n' + s,
+      BlankLineNums: 2,
+    })
+    // document.getElementById("text_p1").innerText = (Object.keys(dict).join(',') + '\r\n' + excel_url + '\r\n' + s)
   }catch(e){}
   return s
 
@@ -692,30 +726,74 @@ function 接龙统计() {
 }
 
 function 作业统计() {
-  let curSheet = Application.ActiveSheet
-  let tbl = Application.Selection.CurrentRegion;
-  if (!tbl)
-    tbl = curSheet.Range("A2").CurrentRegion;
+  let {curSheet, tbl} = 获取有效表位置()
 
-  let s = '';
-  for (let i = 3, id = 1; i <= tbl.Rows.Count; id++,
+  let s = '',
+    levels = [],
+    maptemp = {
+      "受限空间": 0,
+      "动火特级": 0,
+      "动火一级": 0,
+      "动火二级": 0,
+      "高处一级": 0,
+      "高处二级": 0,
+      "高处三级": 0,
+      "高处四级": 0,
+      "盲板抽堵一级": 0,
+      "盲板抽堵二级": 0,
+      "断路作业": 0,
+      "动土作业": 0,
+      "临时用电": 0,
+      "吊装一级": 0,
+      "吊装二级": 0,
+      "吊装三级": 0,
+      "无特殊作业": 0,
+    },
+    id = 1
+
+  for (let i = 3; i <= tbl.Rows.Count; id++,
     i++) {
     (obj => {
       let workshop = obj.Item("D").Text.replace(/[\r\n\t]/g, ','),
         content = obj.Item("F").Text.replace(/[\r\n\t]/g, ','),
         pos = obj.Item("I").Text.replace(/[\r\n\t]/g, ','),
-        level = obj.Item("J").Text.replace(/[\r\n\t]/g, ',').replace('高处特级', '高处四级')
+        level = obj.Item("J").Text.replace(/[\r\n\t,，]/g, ',').replace('高处特级', '高处四级')
+        levels.push(level)
       s += id + '、' + workshop + '\r\n' + pos + ',' + content + '。涉及' + level + ';\r\n'
     })(tbl.Rows.Item(i).Columns)
   }
 
-  // s = s.replace(/;$/,'。')
+  levels = levels.map((item) => {
+    return item.replace(/\(.*\)/g, '')
+  }).join(',')
+
+  levels = levels.split(/[,，]/).reduce(function(a,b,c){
+    if(b=='动土' || b=='断路')
+      b = b + '作业'
+
+      // a[b] += 1
+
+      if(a[b]==undefined){
+        a[b] = 0
+      }
+      a[b] += 1
+      return a;
+  },{})
+
+  // 删除作业数量0的key
+  // console.log(Object.keys(levels).filter((key)=>levels[key]!=0).reduce((aac,key)=>({ ...aac, [key]: levels[key] }),{}))
+
+  levels = Object.keys(maptemp).filter((key)=>levels[key]!=undefined).map((key)=>(`${key} ${levels[key]} 项`) ).join(', ')
+
+  s = s.replace(/[\r\n]*$/g,'').replace(/[\.。]+/g,'。').replace(/;$/,'。')
 
 	let line = tbl.Rows.Count
 	let ts = new Date(tbl.Rows.Item(line).Columns.Item("L").Text).format('M月d日')
 
+  // s.match(/^\d+\**\d*/gm)
+
   try{
-    document.getElementById("text_p").innerText = `${ts}乙烯分公司重点关注危险作业：\r\n${s}`
+    document.getElementById("text_p1").innerText = `${ts}乙烯分公司检维修作业：\r\n${s}\r\n\r\n涉及${levels}，共计${id-1}项。`
   }catch(e){}
 
   return tbl;
@@ -742,20 +820,94 @@ async function 线上风险研判() {
 
 function 离线风险研判() {
   let {curSheet, tbl} = 获取有效表位置()
-  let logmsg = ''
-  let checkfun = (text)=>{
+  let logmsg = []
+  let checkfun = (person,jiezhi,jibie,start_t,end_t, tbl, i)=>{
+    //标记错误行为红色
+    if(
+      person.length<4 ||
+      (
+        /火/.test(jibie) &&
+        (
+          /无/.test(jiezhi) ||
+          !/(是|否)$/.test(person) ||
+          /[\r\n]/.test(person) ||
+          !/作\s*业\s*\d+\s*人\s*[:：]/.test(person) ||
+          (
+            new Date(end_t).getHours()>=18 ||
+            new Date(start_t).getHours()<8 ||
+            (
+              new Date(end_t).getDate() != new Date(start_t).getDate() ||
+              new Date(end_t).getTime() <= new Date(start_t).getTime()
+            )
+          )
+        )
+      )
+    ){
 
+      背景填充(0x0000ff, tbl.Rows.Item(i)) //涂红
+
+      //标记具体哪个单元格错误
+      if((/无/.test(jiezhi) && /火/.test(jibie))){
+        背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('G'))
+        logmsg.push(`<i data-pos="G${i}">G${i}：介质不允许填无</i>`)
+      }
+
+      if(person.length<4){
+        背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('N'))
+        // logmsg.push(`N${i}：备注栏信息不全`)
+        logmsg.push(`<i data-pos="N${i}">N${i}：备注栏信息不全</i>`)
+      }
+
+      if(!/(是|否)$/.test(person.replace(/[\r\n]*$/g,''))){
+        背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('N'))
+        // logmsg.push(`N${i}：没有备注是否录像`)
+        logmsg.push(`<i data-pos="N${i}">N${i}：没有备注是否录像</i>`)
+      }
+
+      if(/[\r\n]/.test(person.replace(/[\r\n]*$/g,''))){
+        背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('N'))
+        logmsg.push(`N${i}：备注栏中有换行`)
+        logmsg.push(`<i data-pos="N${i}">N${i}：备注栏中有换行</i>`)
+      }
+
+      if(!/作\s*业\s*\d+\s*人\s*[:：]/.test(person)){
+        背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('N'))
+        // logmsg.push(`N${i}：作业N人后无冒号或未填写人数`)
+        logmsg.push(`<i data-pos="N${i}">N${i}：作业N人后无冒号或未填写人数</i>`)
+      }
+
+      if(new Date(end_t).getHours()>=18){
+        背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('L'))
+        // logmsg.push(`L${i}：时间超限`)
+        logmsg.push(`<i data-pos="L${i}">L${i}：时间超限</i>`)
+      }
+      if(new Date(start_t).getHours()<8){
+        背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('K'))
+        // logmsg.push(`K${i}：时间超限`)
+        logmsg.push(`<i data-pos="K${i}">K${i}：时间超限</i>`)
+      }
+      if(new Date(end_t).getDate() != new Date(start_t).getDate()){
+        背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('K:L'))
+        // logmsg.push(`K${i}L${i}：日期不合规`)
+        logmsg.push(`<i data-pos="K${i}:L${i}">K${i}L${i}：日期不合规</i>`)
+      }
+      if(new Date(end_t).getTime()<= new Date(start_t).getTime()){
+        背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('K:L'))
+        // logmsg.push(`K${i}L${i}：开始时间晚于结束时间`)
+        logmsg.push(`<i data-pos="K${i}:L${i}">K${i}L${i}：开始时间晚于结束时间</i>`)
+      }
+    }
   }
   // if(tbl.Rows.Count==tbl.Columns.Count) 无作业
 
   let line = tbl.Rows.Count
 
-  let s = [];
+  let levels = [];
   for (let i = 3; i <= tbl.Rows.Count; i++) {
     (obj => {
       let id = obj.Item("A").Text.trim(),
         level = obj.Item("J").Text.replace(/[\r\n\t,，]/g, ',')
-      s.push(level)
+      levels.push(level)
     })(tbl.Rows.Item(i).Columns)
     let person = tbl.Rows.Item(i).Columns.Item("N").Text
     let jiezhi = tbl.Rows.Item(i).Columns.Item("G").Text
@@ -763,50 +915,14 @@ function 离线风险研判() {
     let start_t = tbl.Rows.Item(i).Columns.Item("K").Text.replaceAll('-','/')
     let end_t = tbl.Rows.Item(i).Columns.Item("L").Text.replaceAll('-','/')
 
-    //标记错误行为红色
-    if(person.length<4 || (/火/.test(jibie) && ( !/(是|否)/.test(person) || /无/.test(jiezhi) || /[\r\n]/.test(person) ||(new Date(end_t).getHours()>=18 || new Date(start_t).getHours()<8 || (new Date(end_t).getDate() != new Date(start_t).getDate()) || new Date(end_t).getTime()<= new Date(start_t).getTime())))){
-
-      背景填充(0x0000ff, tbl.Rows.Item(i)) //涂红
-
-      //标记具体哪个单元格错误
-      if((/无/.test(jiezhi) && /火/.test(jibie))){
-        背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('G'))
-        logmsg = `${logmsg}G${i}：介质不允许填无\r\n`
-      }
-      if(person.length<4 || !/(是|否)/.test(person)){
-        背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('N'))
-        logmsg = `${logmsg}N${i}：没有备注是否录像\r\n`
-      }
-
-      if(/[\r\n]/.test(person)){
-        背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('N'))
-        logmsg = `${logmsg}N${i}：备注栏中有换行\r\n`
-      }
-
-      if(new Date(end_t).getHours()>=18){
-        背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('L'))
-        logmsg = `${logmsg}L${i}：时间超限\r\n`
-      }
-      if(new Date(start_t).getHours()<8){
-        背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('K'))
-        logmsg = `${logmsg}K${i}：时间超限\r\n`
-      }
-      if(new Date(end_t).getDate() != new Date(start_t).getDate()){
-        背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('K:L'))
-        logmsg = `${logmsg}K${i}L${i}：日期不合规\r\n`
-      }
-      if(new Date(end_t).getTime()<= new Date(start_t).getTime()){
-        背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('K:L'))
-        logmsg = `${logmsg}K${i}L${i}：开始时间晚于结束时间\r\n`
-      }
-    }
+    checkfun(person.replace(/\s*$/g,''),jiezhi,jibie,start_t,end_t, tbl, i)
 
   }
   let riqi = new Date(tbl.Rows.Item(line).Columns.Item("K").Text).format('yyyy-MM-dd') + '至' + new Date(tbl.Rows.Item(line).Columns.Item("L").Text).format('yyyy-MM-dd')
 
   heji = 0
 
-  s = s.map((item) => {
+  levels = levels.map((item) => {
     return item.replace(/\(.*\)/g, '')
   }).join(',')
 
@@ -825,7 +941,7 @@ function 离线风险研判() {
   }
   let convert = function(k) {
     let r = new RegExp(k, 'g')
-    let result = s.match(r)
+    let result = levels.match(r)
     if (result != null)
       return result.length;
     return 0;
@@ -837,10 +953,15 @@ function 离线风险研判() {
 
   let starttime = new Date(tbl.Rows.Item(line).Columns.Item("K").Text)
   let word_url = `http://localhost:8010/tp6/public/index.php/word/exportWord?workdata[]=${a['动火特级']}&workdata[]=${a['动火一级']}&workdata[]=${a['动火二级']}&workdata[]=${a['受限']}&workdata[]=${a['盲板']}&workdata[]=${a['高处']}&workdata[]=${a['吊装']}&workdata[]=${a['临时用电']}&workdata[]=${a['动土']}&workdata[]=${a['断路']}&workdata[]=${a['无特殊']}&riqi=${starttime.getTime()/1000}`
-  // let word_url = `http://127.0.0.1:8010/word.php?workdata[]=${a['动火特级']}&workdata[]=${a['动火一级']}&workdata[]=${a['动火二级']}&workdata[]=${a['受限']}&workdata[]=${a['盲板']}&workdata[]=${a['高处']}&workdata[]=${a['吊装']}&workdata[]=${a['临时用电']}&workdata[]=${a['动土']}&workdata[]=${a['断路']}&workdata[]=${a['无特殊']}&riqi=${starttime.getTime()/1000}`
+
   $('#word_url').text('导出风险研判表')
   $('#word_url')[0].dataset.url = word_url
-  $('#text_p').text(logmsg)
+
+  // $('#text_p1').text(logmsg.join('<br>'))
+  $('#text_p2').html(logmsg.join('<br>'))
+  $('#text_p2').click(function(e){
+    Application.ActiveSheet.Range(e.target.dataset.pos).Select()
+  })
 
   let tb = $('.cube')
   if (tb.length <= 0) {
@@ -962,14 +1083,37 @@ function 隐患统计() {
   }
   try{
     // s += '模板在: cube123.cn/tp6/public/隐患图册模板.docx\r\n\r\n' + s
-    document.getElementById("text_p").innerText = s
+    document.getElementById("text_p1").innerText = s
   }catch(e){}
   return s
 }
 
-
 function 卡具统计() {
   let {curSheet, tbl} = 获取有效表位置()
+}
+
+function 备注列格式化(){
+  let {curSheet, tbl} = 获取有效表位置()
+
+  //保留动火受限行
+  for (let i = 3; i <= tbl.Rows.Count;) {
+    let tmp = tbl.Rows.Item(i).Columns.Item(col).Text
+
+    // tbl.Rows.Item(i).Columns.Item("A").Value2 = ""
+    if (/(特级|受限)/.test(tmp)) {
+      // tbl.Rows.Item(i).Columns.Item("A").Value2 = "**"
+      //涂黄
+      背景填充(0x00ffff, tbl.Rows.Item(i))
+    }
+
+    if (new RegExp(pattern_str, 'g').test(tmp)) {} else {
+      tbl.Rows.Item(i).Delete()
+      continue
+      //因为删除之后,下面行上移,所以i不用改变
+    }
+    i++
+  }
+  return tbl
 }
 
 $AddCss('../js/style.css')
@@ -981,14 +1125,14 @@ $(function() {
       $getWork(d)
     }
   })
-  $('#text_p, #text_pp, .cube').dblclick(function() {
+  $('#text_p1, #log_text, .cube').dblclick(function() {
     // this.innerText = ''
-		$('#word_url, .cube, #text_p, #text_pp').text('')
+		$('#word_url, .cube, #text_p1, #log_text').text('')
   })
 
   $('#replacekey').keypress(function(e) {
     if (e.which == 13) {
-      $('#text_p').text(this.value)
+      $('#text_p1').text(this.value)
     }
   })
 })
