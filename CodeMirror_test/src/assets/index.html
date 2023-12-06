@@ -2,26 +2,45 @@
 * @Author: Cube
 * @Date:   2023-11-08 20:52:01
 * @Last Modified by:   Cube
-* @Last Modified time: 2023-11-10 07:57:40
+* @Last Modified time: 2023-11-21 12:30:05
 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="codemirror.bundle.css">
     <title>Document</title>
 </head>
 <body>
+    <div id="text_p1">
+
+    </div>
     <script src="codemirror.bundle.js"></script>
     <script>
         let editor = CodeMirror({
-            BlankLineNums: 0
+          parent: document.getElementById("text_p1"),
+          doc: `火-水汽隔油池油水分离器及附属管线做保温
+吊火-水汽广田一循余热回收项目施工
+高-水汽混床A拆人孔架子
+土-水汽一循凉水塔南侧处理雨排管线漏点
+高火-水汽一循循环水改造
+吊土-储运广田余热施工项目
+吊土-储运广田余热施工项目
+无-储运LPG燃料泵1300-P090B更换出口止回阀
+火-电气电伴热维修
+火-电气门禁系统改造
+火-电气门禁系统改造
+火-电气门禁系统改造
+高-电气水汽污水增设摄像头项目`,
+          BlankLineNums: 2,
         })
     </script>
 </body>
 </html>
 
 
+<div style="display:none">
     let editor = CodeMirror(document.getElementById("text_p"), {
     // let editor = CodeMirror.fromTextArea(document.getElementById("myTextarea"), {
         value: `let abc = 123\r\n456`,
@@ -58,3 +77,4 @@
   editor.doc.eachLine(0,editor.doc.size,function(line){
       console.log(line)
   })
+</div>

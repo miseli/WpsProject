@@ -1,3 +1,47 @@
+// $$('tr.item>td:nth-child(3)').each((id, item)=>{
+//     if(/(加氢芳烃一|裂解|乙烯二|加氢芳烃二|苯乙烯二|聚乙烯二|中心化验)/.test($$(item).text())){
+//         $$(item).parent().hide()
+//     }
+// })
+
+// let tds = '乙烯车间|聚乙烯一车间|聚丙烯一车间|聚丙烯二车间|苯乙烯车间|加氢抽提联合车间|聚苯乙烯车间|水汽车间|储运车间|仪表车间|电气车间'.split('|')
+// $$('tr.item>td:nth-child(3)').each((id, item)=>{
+//     if(/(乙烯|聚乙烯一|聚丙烯一|聚丙烯二|苯乙烯|加氢抽提联合|水汽|储运|仪表|电气)车间/.test($$(item).text())){
+//         $$(item).parent().hide()
+//     }
+// })
+
+
+// $$('span:contains("确认审核")').each((id,item)=>{
+//     let url = $$(item).parent('a').data('url')
+//   let parentid = url.match(/\/CommonBiz\/DTWorkBackupMainForm\/Excute\/(.+)\?op=QueRen/)[1]
+//   $axios.post('/DTWorkBackup/BatchUpQueRen', $qs.stringify({parentid})).then(res=>{
+//     console.log(res)
+//   })
+// })
+
+
+// function DoConverseCallTimer() {
+//     videoifplayFlag = true
+//   if(document.form2.thzt.value == "") {
+//   } else {
+//     //document.form2.conversestart.disabled=true;
+//     var minute="0";
+//     var second="0";
+//     begintime = parseInt(begintime)+1;  //**在这里+1秒
+//     minute = parseInt(begintime/60);
+//     second = begintime%60;
+
+//     document.form2.thzt.value =minute+"分"+second+"秒";
+//     jQuery("#benci").html(minute+"分"+second+"秒");
+
+//     timer1 = window.setTimeout("DoConverseCallTimer()",1000);
+//     document.form2.passedtime.value = begintime;
+//     openTishi(begintime);
+//   }
+// }
+
+
 // Formula 公式
 // Value 单元格格式化 后 的值
 // Value 单元格格式化 前 的值
@@ -32,6 +76,14 @@ Date.prototype.eq = function(date) {
   if (!(date instanceof Date))
     throw 'arg1必须是日期对象';
   return this.valueOf() == date.valueOf()
+}
+
+Number.prototype.leftpadding = function(length = 2, padchar = '0'){
+  return (Array(length).join(padchar) + this).slice(-length)
+}
+
+function leftpadding(num, length = 2, padchar = ' ') {
+  return (Array(length).join(padchar) + num).slice(-length)
 }
 
 const events = {
@@ -152,6 +204,11 @@ function shellExecuteByOAAssist(param) {
   }
 }
 
+/**
+ * 以序号单元格为基准,查找有效表格位置
+ * 返回序号单元格的row,col
+ * 返回当前表curSheet,有范围tbl
+ */
 function 获取有效表位置(){
   try{
     let curSheet = Application.ActiveSheet
@@ -160,7 +217,7 @@ function 获取有效表位置(){
       for(let i=1; i<5; i++){
         for(let j=1; j<10; j++){
           if(/序号/.test(curSheet.Columns.Item(i).Rows.Item(j).Value2)){
-            curSheet.Columns.Item(i).Rows.Item(j).Select()
+            // curSheet.Columns.Item(i).Rows.Item(j).Select()
             tbl = Application.Selection.CurrentRegion
             console.log(i,j) //列,行
             return {curSheet, tbl, row: j, col: i}
@@ -609,6 +666,7 @@ function 检维修日表() {
     // 修改备注栏
     let beizhu = tbl.Rows.Item(i).Columns.Item("O").Text
     tbl.Rows.Item(i).Columns.Item("O").Value2 = /是/.test(beizhu)?'是':'否'
+
     // if(/无特殊/g.test(tmp)){
 	   //  tbl.Rows.Item(i).Delete()
 	   //  continue //删除操作后,后面的行或者列前移,位置发生变化; j是用来编辑新序号的
@@ -665,21 +723,20 @@ function 自动列宽() {
 }
 
 function 接龙统计() {
-  // alert('系统错误')
-	// return;
+  let flag = 0
   let dict = {
     "乙烯车间": 1,
     "聚乙烯一车间": 2,
     "聚丙烯一车间": 3,
-    "聚丙烯二车间": 4,
-    "苯乙烯一车间": 5,
-    "加氢抽提联合车间": 6,
-    "聚苯乙烯车间": 7,
-    "水汽车间": 8,
-    "储运车间": 9,
-    "仪表车间": 10,
-    "电气车间": 11,
-    "成品车间": 12
+    "聚丙烯二车间": 3,
+    "苯乙烯一车间": 4,
+    "加氢抽提联合车间": 5,
+    "聚苯乙烯车间": 6,
+    "水汽车间": 7,
+    "储运车间": 8,
+    "仪表车间": 9,
+    "电气车间": 10,
+    "成品车间": 11
   }
 
   let {curSheet, tbl} = 获取有效表位置()
@@ -694,35 +751,140 @@ function 接龙统计() {
         content = obj.Item("C").Text.replace(/[\r\n\t,，]/g, ','),
         pos = obj.Item("I").Text.replace(/[\r\n\t,，]/g, ','),
         level = obj.Item("J").Text.replace(/[\r\n\t,，]/g, ',')
-      delete dict[obj.Item("D").Text.replace(/[\r\n\t,，]/g, '')]
+        if(/聚丙/.test(workshop)){
+          delete dict['聚丙烯一车间']
+          delete dict['聚丙烯二车间']
+        }else{
+          delete dict[obj.Item("D").Text.replace(/[\r\n\t,，]/g, '')]
+          workshop = workshop.replace(/[一二]/,'')
+        }
+      // workshop = workshop.replace('聚丙烯一','聚丙烯').replace('聚丙烯二','聚丙烯')
       let tmp = `${level.replace(/[^火受盲高吊临土断无]/g, '')}-` + workshop + workname
 			tmp = tmp.replace(/[ *]/g,'')
-      // s += id + (tmp.length > 20 ? `*${tmp.length - 20}` : '') + '\t\t' + tmp + '\r\n'
+    if(!flag){
       s += tmp + '\r\n'
+    }else{
+      s += id + (tmp.length > 20 ? `*${tmp.length - 20}` : '') + '\t\t' + tmp + '\r\n'
+    }
     })(tbl.Rows.Item(i).Columns)
   }
 
   let outname = new Date(tbl.Rows.Item(line).Columns.Item("L").Text).format('yyyy-MM-dd').replace(/-/g, '')
   let ts = new Date(tbl.Rows.Item(line).Columns.Item("L").Text).format('yyyy-MM-dd')
   ts = new Date(ts).getTime()/1000
-  let excel_url = 'http://localhost:8010/tp6/public/excel/get?n[]=' + Object.values(dict).join('&n[]=')+ `&outname=${outname}` + `&ts=${ts}`
+  let excel_url = `http://localhost:8010/tp6/public/excel/get?n[]=${Object.values(dict).join('&n[]=')}&outname=${outname}&ts=${ts}`
+
+  if(Object.values(dict).length==0)
+    excel_url = `http://localhost:8010/tp6/public/excel/get?outname=${outname}&ts=${ts}`
 
   try{
     $('#word_url').text('导出签到表')
     $('#word_url')[0].dataset.url = excel_url
     document.getElementById("text_p1").innerText = excel_url
-    let editor = CodeMirror({
-      parent: document.getElementById("text_p1"),
-      doc: Object.keys(dict).join(',') + '\r\n' + excel_url + '\r\n' + s,
-      BlankLineNums: 2,
-    })
-    // document.getElementById("text_p1").innerText = (Object.keys(dict).join(',') + '\r\n' + excel_url + '\r\n' + s)
+    if(!flag){
+      let editor = CodeMirror({
+        parent: document.getElementById("text_p1"),
+        doc: Object.keys(dict).join(',') + '\r\n' + excel_url + '\r\n' + s,
+        BlankLineNums: 2,
+      })
+    }else{
+      document.getElementById("text_p1").innerText = (Object.keys(dict).join(',') + '\r\n' + excel_url + '\r\n' + s)
+    }
   }catch(e){}
   return s
 
   // document.getElementById("text_p").innerText = (Object.keys(dict).join(',') + '\r\n' + 'http://127.0.0.1:8010/excel.php?n[]=' + Object.values(dict).join('&n[]=')+ `&outname=${outname}` + `&ts=${ts}\r\n` + s)
   // shellExecuteByOAAssist('http://127.0.0.1:8010/excel.php?n[]=' + Object.values(dict).join('&n[]=') + `&outname=${outname}`)
   return tbl;
+}
+
+function 早会统计() {
+  let {curSheet, tbl} = 获取有效表位置()
+
+  let s = '', teji = '',
+    levels = [],
+    maptemp = {
+      "受限空间": 0,
+      "动火特级": 0,
+      "动火一级": 0,
+      "动火二级": 0
+    },
+    id = 1, id1 = 0
+
+  for (let i = 3; i <= tbl.Rows.Count; id++,
+    i++) {
+    (obj => {
+      let workshop = obj.Item("D").Text.replace(/[\r\n\t]/g, ','),
+        content = obj.Item("F").Text.replace(/[\r\n\t]/g, ','),
+        pos = obj.Item("I").Text.replace(/[\r\n\t]/g, ','),
+        level = obj.Item("J").Text.replace(/[\r\n\t,，]/g, ',').replace('高处特级', '高处四级')
+      levels.push(level)
+      if (/(受限|动火)/.test(level)){
+        if (/(焊|堵|漏)/.test(content)) {
+          //明火土黄色
+          背景填充(0x8FBFFA, tbl.Rows.Item(i))
+          id1++
+        }
+      }
+      if(/(动火特级|受限)/.test(level)){
+        teji += id + '、' + workshop + '\r\n' + pos + ',' + content + '。涉及' + level + ';\r\n'
+      }
+      if(!/聚丙/.test(workshop))
+        workshop = workshop.replace(/[一二]/,'')
+
+      s += id + '、' + workshop + '\r\n' + pos + ',' + content + '。涉及' + level + ';\r\n'
+    })(tbl.Rows.Item(i).Columns)
+  }
+
+  levels = levels.map((item) => {
+    return item.replace(/\(.*\)/g, '')
+  }).join(',')
+
+  levels = levels.split(/[,，]/).reduce(function(a,b,c){
+    if(b=='动土' || b=='断路')
+      b = b + '作业'
+
+      // a[b] += 1
+
+      if(a[b]==undefined){
+        a[b] = 0
+      }
+      a[b] += 1
+      return a;
+  },{})
+
+  // 删除作业数量0的key
+  // console.log(Object.keys(levels).filter((key)=>levels[key]!=0).reduce((aac,key)=>({ ...aac, [key]: levels[key] }),{}))
+
+  levels = Object.keys(maptemp).filter((key)=>levels[key]!=undefined).map((key)=>(`${key} ${levels[key]} 项`) ).join('\r\n')
+
+  s = s.replace(/[\r\n]*$/g,'').replace(/[\.。]+/g,'。').replace(/;$/,'。')
+
+  let line = tbl.Rows.Count
+  let ts = new Date(tbl.Rows.Item(line).Columns.Item("L").Text).format('M月d日')
+
+  // s.match(/^\d+\**\d*/gm)
+
+  try{
+    document.getElementById("text_p1").innerText =  `${ts}动火、受限空间作业共计 ${id-1} 项\r\n${levels}\r\n涉及电气焊等明火作业 ${id1} 项, 防腐保温类 ${id-1-id1} 项。\r\n\r\n动火特级、受限空间作业：\r\n${teji}\r\n重点关注：\r\n${s}`
+  }catch(e){}
+
+  return tbl;
+  // let curSheet = Application.EtApplication().ActiveSheet;
+  // if (curSheet) {
+  //  curSheet.Cells.Item(1, 1).Formula = "Hello, wps加载项!" + curSheet.Cells.Item(1, 1).Formula
+  // }
+  // Application.Cells(tbl.Rows.Count + 1, "C").Value2 = s
+  // Application.Cells(tbl.Rows.Count + 1, "C").HorizontalAlignment = wps.Enum.xlHAlignLeft
+  // Application.Cells(tbl.Rows.Count + 1, "C").Rows.AutoFit()
+  //  级别:
+  //  let line = tbl.Rows.Count
+  //  let _tmp = tbl.Range("J3:J"+line)
+  //  for(let i=1; i<=_tmp.Count; i++){
+  //      let t = _tmp.Rows.Item(i).Text
+  //      t = t.replace(/[\r\n]+/g,'，')
+  //      level.push(t)
+  //  }
 }
 
 function 作业统计() {
@@ -758,7 +920,17 @@ function 作业统计() {
         content = obj.Item("F").Text.replace(/[\r\n\t]/g, ','),
         pos = obj.Item("I").Text.replace(/[\r\n\t]/g, ','),
         level = obj.Item("J").Text.replace(/[\r\n\t,，]/g, ',').replace('高处特级', '高处四级')
-        levels.push(level)
+
+      if(!/聚丙/.test(workshop))
+        workshop = workshop.replace(/[一二]/,'')
+
+      if(/聚丙/.test(workshop)){
+        workshop = workshop.replace('车间','')
+        content = workshop + '装置,' + content
+        workshop = workshop.replace(/[一二]/,'车间')
+      }
+
+      levels.push(level)
       s += id + '、' + workshop + '\r\n' + pos + ',' + content + '。涉及' + level + ';\r\n'
     })(tbl.Rows.Item(i).Columns)
   }
@@ -793,7 +965,7 @@ function 作业统计() {
   // s.match(/^\d+\**\d*/gm)
 
   try{
-    document.getElementById("text_p1").innerText = `${ts}乙烯分公司检维修作业：\r\n${s}\r\n\r\n涉及${levels}，共计${id-1}项。`
+    document.getElementById("text_p1").innerText = `${ts}乙烯分公司检维修作业：\r\n${s}\r\n\r\n其中涉及${levels}，共计${id-1}项。`
   }catch(e){}
 
   return tbl;
@@ -831,7 +1003,7 @@ function 离线风险研判() {
           /无/.test(jiezhi) ||
           !/(是|否)$/.test(person) ||
           /[\r\n]/.test(person) ||
-          !/作\s*业\s*\d+\s*人\s*[:：]/.test(person) ||
+          !/作\s*业\s*\d+\s*人\s*/.test(person) ||
           (
             new Date(end_t).getHours()>=18 ||
             new Date(start_t).getHours()<8 ||
@@ -844,7 +1016,7 @@ function 离线风险研判() {
       )
     ){
 
-      背景填充(0x0000ff, tbl.Rows.Item(i)) //涂红
+      // 背景填充(0x0000ff, tbl.Rows.Item(i)) //涂红
 
       //标记具体哪个单元格错误
       if((/无/.test(jiezhi) && /火/.test(jibie))){
@@ -866,11 +1038,11 @@ function 离线风险研判() {
 
       if(/[\r\n]/.test(person.replace(/[\r\n]*$/g,''))){
         背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('N'))
-        logmsg.push(`N${i}：备注栏中有换行`)
+        // logmsg.push(`N${i}：备注栏中有换行`)
         logmsg.push(`<i data-pos="N${i}">N${i}：备注栏中有换行</i>`)
       }
 
-      if(!/作\s*业\s*\d+\s*人\s*[:：]/.test(person)){
+      if(!/作\s*业\s*\d+\s*人\s*/.test(person)){
         背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('N'))
         // logmsg.push(`N${i}：作业N人后无冒号或未填写人数`)
         logmsg.push(`<i data-pos="N${i}">N${i}：作业N人后无冒号或未填写人数</i>`)
@@ -1041,18 +1213,25 @@ function 特殊作业(col = 'J', pattern_str = '无特殊作业') {
 }
 
 // 删除非动火受限项目
-function 动火受限(col = 'J', pattern_str = '(动火|受限)') {
-  let {curSheet, tbl} = 获取有效表位置()
+function 动火受限(pattern_str = '(动火|受限)') {
+  let {curSheet, tbl, col} = 获取有效表位置()
+  col = String.fromCharCode(65-1 + col + 9)
 
   //保留动火受限行
   for (let i = 3; i <= tbl.Rows.Count;) {
     let tmp = tbl.Rows.Item(i).Columns.Item(col).Text
 
     // tbl.Rows.Item(i).Columns.Item("A").Value2 = ""
-    if (/(特级|受限)/.test(tmp)) {
+    if (/特级/.test(tmp)) {
       // tbl.Rows.Item(i).Columns.Item("A").Value2 = "**"
       //涂黄
       背景填充(0x00ffff, tbl.Rows.Item(i))
+    }
+
+    if (/受限/.test(tmp)) {
+      // tbl.Rows.Item(i).Columns.Item("A").Value2 = "**"
+      //涂黄
+      背景填充(0xC7A0B1, tbl.Rows.Item(i))
     }
 
     if (new RegExp(pattern_str, 'g').test(tmp)) {} else {
@@ -1125,9 +1304,9 @@ $(function() {
       $getWork(d)
     }
   })
-  $('#text_p1, #log_text, .cube').dblclick(function() {
+  $('#text_p2, #text_p1, #log_text, .cube').dblclick(function() {
     // this.innerText = ''
-		$('#word_url, .cube, #text_p1, #log_text').text('')
+		$('#word_url, .cube, #text_p1, #text_p2, #log_text').text('')
   })
 
   $('#replacekey').keypress(function(e) {

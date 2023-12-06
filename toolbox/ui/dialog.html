@@ -11,7 +11,13 @@
 	<meta charset="utf-8">
 	<!--     <link rel="stylesheet" href="../js/layui.css" type="text/css" media="all">
 <link rel="stylesheet" href="../js/webframecss@v=1.0.0.css" type="text/css" media="all"> -->
-	<link rel="stylesheet" href="../js/codemirror.min.css" type="text/css" media="all">
+	<link rel="stylesheet" href="../js/codemirror.bundle.css" type="text/css" media="all">
+	<style>
+		.cm-activeLine.cm-line, .cm-activeLineGutter{
+			background-color: rgb(143 218 255 / 27%) !important;
+		}
+
+	</style>
 </head>
 <script type="text/javascript" src="../js/jquery.min.js"></script>
 <script type="text/javascript" src="../js/axios.min.js"></script>
@@ -41,11 +47,12 @@
 <label>日期差值：<input id="date1" type="text"/></label> -->
 					<!-- <br/> -->
 					<button data-action="离线风险研判" title=""></button>
-					<label>日期差值：<input id="date11" type="text" /></label>
+					<!-- <label>日期差值：<input id="date11" type="text" /></label> -->
 					<br />
 					<!-- <button data-action="隐患统计" title="统计隐患图册内容"></button> -->
 					<button data-action="接龙统计" title="自动删除无特殊作业后统计"></button>
 					<button data-action="作业统计" title="统计所有作业"></button>
+					<button data-action="早会统计" title="统计电气焊动火作业受限作业"></button>
 					<!-- <button data-action="卡具统计" title="统计卡具台账"></button> -->
 					<br />
 					<!-- <button data-action="研判签到表"></button> -->
@@ -61,7 +68,7 @@
 			</div>
 			<div class="right">
 				<div class="buttons">
-					<button data-action="特殊作业" title="删除无特殊作业"></button>
+					<!-- <button data-action="特殊作业" title="删除无特殊作业"></button> -->
 					<button data-action="动火受限" title="删除非动火受限"></button>
 					<button data-action="检维修日表" title="设置A4格式,不删除无特殊作业">检维修日表</button>
 					<br />
