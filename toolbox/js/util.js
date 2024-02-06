@@ -199,9 +199,10 @@ function GetUrlPath() {
  * @param {*} param 需要执行的脚本
  */
 function shellExecuteByOAAssist(param) {
-  if (wps != null) {
-    wps.OAAssist.ShellExecute(param)
-  }
+  axios.post('http://127.0.0.1:8010/tp6/public/Index/excelwordmiddle',{url:param})
+  // if (wps != null) {
+  //   wps.OAAssist.ShellExecute(param)
+  // }
 }
 
 /**
@@ -866,7 +867,8 @@ function 早会统计() {
   // s.match(/^\d+\**\d*/gm)
 
   try{
-    document.getElementById("text_p1").innerText =  `${ts}动火、受限空间作业共计 ${id-1} 项\r\n${levels}\r\n涉及电气焊等明火作业 ${id1} 项, 防腐保温类 ${id-1-id1} 项。\r\n\r\n动火特级、受限空间作业：\r\n${teji}\r\n重点关注：\r\n${s}`
+    document.getElementById("text_p1").innerText =  `${ts}动火、受限空间作业共计 ${id-1} 项\r\n${levels}\r\n涉及电气焊等明火作业 ${id1} 项, 防腐保温类 ${id-1-id1} 项。\r\n\r\n动火特级、受限空间作业：\r\n${teji}\r\n重点关注：\r\n`
+    // document.getElementById("text_p1").innerText =  `${ts}动火、受限空间作业共计 ${id-1} 项\r\n${levels}\r\n涉及电气焊等明火作业 ${id1} 项, 防腐保温类 ${id-1-id1} 项。\r\n\r\n动火特级、受限空间作业：\r\n${teji}\r\n重点关注：\r\n${s}`
   }catch(e){}
 
   return tbl;
