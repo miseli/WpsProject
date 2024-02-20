@@ -774,14 +774,21 @@ function 接龙统计() {
   let ts = new Date(tbl.Rows.Item(line).Columns.Item("L").Text).format('yyyy-MM-dd')
   ts = new Date(ts).getTime()/1000
   let excel_url = `http://localhost:8010/tp6/public/excel/get?n[]=${Object.values(dict).join('&n[]=')}&outname=${outname}&ts=${ts}`
+  let excel_image_url = `http://localhost:8010/tp6/public/Excel/getimage?n[]=${Object.values(dict).join('&n[]=')}&outname=${outname}&ts=${ts}`
 
-  if(Object.values(dict).length==0)
+  if(Object.values(dict).length==0){
     excel_url = `http://localhost:8010/tp6/public/excel/get?outname=${outname}&ts=${ts}`
+    excel_image_url = `http://localhost:8010/tp6/public/Excel/getimage?outname=${outname}&ts=${ts}`
+  }
+
 
   try{
     $('#word_url').text('导出签到表')
     $('#word_url')[0].dataset.url = excel_url
+    $('#signexport').text('生成签到表')
+    $('#signexport')[0].dataset.url = excel_image_url
     document.getElementById("text_p1").innerText = excel_url
+    document.getElementById("text_p2").innerText = excel_image_url
     if(!flag){
       let editor = CodeMirror({
         parent: document.getElementById("text_p1"),
@@ -1186,6 +1193,108 @@ function 离线风险研判() {
 
 function 备份工作表() {
   Application.ActiveWindow.SelectedSheets.Copy(undefined, Application.ActiveSheet);
+}
+
+//拆分报表为单个日期的子Sheet表
+function 拆分表格(){
+  let {curSheet, tbl, col} = 获取有效表位置()
+
+  /*函数废弃不用*/
+  let HandlingProcess = function(sh, date1){
+    sh.Select()
+    sh.Range("A3").Select()
+    let {curSheet, tbl, col} = 获取有效表位置()
+    for (let i = 3, id=1; i <= tbl.Rows.Count; ) {
+      let start_t = tbl.Rows.Item(i).Columns.Item("K").Text.replaceAll('-','/')
+      let end_t = tbl.Rows.Item(i).Columns.Item("L").Text.replaceAll('-','/')
+      if(new Date(start_t).format("yyyy-MM-dd")!=date1){
+        tbl.Rows.Item(i).Delete()
+        continue
+      }else{
+        tbl.Rows.Item(i).Columns.Item("A").Value2 = id
+        id++
+      }
+      i++
+    }
+  }
+
+
+  let riqi_container = []
+  for (let i = 3; i <= tbl.Rows.Count; i++) {
+    let start_t = tbl.Rows.Item(i).Columns.Item("K").Text.replaceAll('-','/')
+    let outname = new Date(start_t).format("yyyy-MM-dd")
+    riqi_container.push(outname)
+  }
+
+  // 遍历sheet表逐表操作,与HandlingProcess同时废弃不用
+  let uniqueArray = [...new Set(riqi_container)];
+  console.log(uniqueArray)
+  for(let i=0; i<uniqueArray.length; i++){
+    Application.ActiveWindow.ActiveSheet.Copy(undefined, Application.ActiveSheet);
+    Application.Sheets.Item(i+2).Name = uniqueArray[i]
+  }
+  for(let i=0; i<uniqueArray.length; i++){//第一个是备份表,从第二个开始处理
+    HandlingProcess(Application.Sheets.Item(i+2), uniqueArray[i])
+  }
+  let a = Application.Sheets.Item(2).Select()
+}
+
+// 统计多日的报表中所有作业的日期,生成签到表
+function 统计日期() {
+  let {curSheet, tbl, col} = 获取有效表位置()
+
+  let dict = {
+    "乙烯车间": 1,
+    "聚乙烯一车间": 2,
+    "聚丙烯一车间": 3,
+    "聚丙烯二车间": 3,
+    "苯乙烯一车间": 4,
+    "加氢抽提联合车间": 5,
+    "聚苯乙烯车间": 6,
+    "水汽车间": 7,
+    "储运车间": 8,
+    "仪表车间": 9,
+    "电气车间": 10,
+    "成品车间": 11
+  }
+
+  let riqi_container = []
+  let container = {}
+  for (let i = 3; i <= tbl.Rows.Count; i++) {
+    let start_t = tbl.Rows.Item(i).Columns.Item("K").Text.replaceAll('-','/')
+    let end_t = tbl.Rows.Item(i).Columns.Item("L").Text.replaceAll('-','/')
+    let workshop = tbl.Rows.Item(i).Columns.Item("D").Text.replace(/[\r\n\t,，]/g, '')
+    let outname = new Date(start_t).format("yyyy-MM-dd")
+    riqi_container.push(outname)
+    if(!container[outname]){
+      container[outname] = []
+    }
+    container[outname].push(workshop)
+  }
+
+  let excel_image_urls = []
+  for(let [outname,chejian] of Object.entries(container)){
+    let tmpdict = Object.assign({}, dict);
+    for(let workshop of chejian){
+      if(/聚丙/.test(workshop)){
+        delete tmpdict['聚丙烯一车间']
+        delete tmpdict['聚丙烯二车间']
+      }else{
+        delete tmpdict[workshop]
+      }
+    }
+    let ts = new Date(outname).getTime()/1000
+    outname = new Date(outname).format('yyyyMMdd')
+    let excel_image_url = `http://localhost:8010/tp6/public/Excel/getimage?n[]=${Object.values(tmpdict).join('&n[]=')}&outname=${outname}&ts=${ts}`
+
+    if(Object.values(tmpdict).length==0){
+      excel_image_url = `http://localhost:8010/tp6/public/Excel/getimage?outname=${outname}&ts=${ts}`
+    }
+    excel_image_urls.push(excel_image_url)
+  }
+
+  document.getElementById("text_p1").innerText = excel_image_urls.join('\r\n')
+
 }
 
 function 统计属地车间() {

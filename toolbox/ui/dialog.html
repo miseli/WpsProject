@@ -54,6 +54,7 @@
 					<button data-action="作业统计" title="统计所有作业"></button>
 					<button data-action="早会统计" title="统计电气焊动火作业受限作业"></button>
 					<!-- <button data-action="卡具统计" title="统计卡具台账"></button> -->
+					<button data-action="统计日期" title="根据作业日期统计所有作业日期"></button>
 					<br />
 					<!-- <button data-action="研判签到表"></button> -->
 					<!-- <button data-action="统计属地车间"></button> -->
@@ -65,6 +66,7 @@
 				<span style="color: gray" onclick="shellExecuteByOAAssist(this.innerText)">http://127.0.0.1:3889/ui/dialog.html</span>
 				<br />
 				<span id="word_url" onclick="shellExecuteByOAAssist(this.dataset.url)"></span>
+				<span id="signexport" onclick="shellExecuteByOAAssist(this.dataset.url)"></span>
 			</div>
 			<div class="right">
 				<div class="buttons">
@@ -74,6 +76,8 @@
 					<br />
 					<button data-action="重点检维修分享" title="以及于丽娟发的表"></button>
 					<button data-action="备份工作表"></button>
+					<br />
+					<button data-action="拆分表格" title="根据作业日期拆分成多个Sheet表"></button>
 				</div>
 			</div>
 		</div>
@@ -122,7 +126,7 @@ div.right {
 	border-left: 2px solid red;
 }
 
-#word_url {
+#word_url,#signexport {
 	background-color: #009688;
 	color: #fff;
 	line-height: 18px;   cursor: pointer;
