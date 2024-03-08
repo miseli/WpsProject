@@ -599,23 +599,23 @@ function 重点检维修分享() {
 
   //删掉没有动火受限行,标记特级
   for (let i = 3, j = 0; i <= tbl.Rows.Count;) {
-    let tmp = tbl.Rows.Item(i).Columns.Item("K").Text
-		// tbl.Rows.Item(i).Columns.Item("K").Select()
-    // tbl.Rows.Item(i).Columns.Item("A").Value2 = ""
+    let tmp = curSheet.Rows.Item(i).Columns.Item("K").Text
+		// curSheet.Rows.Item(i).Columns.Item("K").Select()
+    // curSheet.Rows.Item(i).Columns.Item("A").Value2 = ""
 
-    tbl.Rows.Item(i).Columns.Item("O").Value2 = /是/.test(tbl.Rows.Item(i).Columns.Item("O").Text)?1:0
+    curSheet.Rows.Item(i).Columns.Item("O").Value2 = /是/.test(curSheet.Rows.Item(i).Columns.Item("O").Text)?1:0
 
     if (/(特级|受限)/.test(tmp)) {
       //涂黄
       背景填充(0x00ffff, tbl.Rows.Item(i))
     }
     if (!/(动火|受限)/.test(tmp)) {
-      // tbl.Rows.Item(i).Delete()
+      // curSheet.Rows.Item(i).Delete()
       // continue
     } else {
       // 编辑序号
       j++;
-      tbl.Rows.Item(i).Columns.Item("B").Value2 = '' + j
+      curSheet.Rows.Item(i).Columns.Item("B").Value2 = '' + j
     }
     i++
   }
@@ -639,7 +639,7 @@ function 重点检维修分享() {
 }
 
 function 检维修日表() {
-  let {curSheet, tbl} = 获取有效表位置()
+  let {curSheet, tbl, row, col} = 获取有效表位置()
 
   //居中自动换行
   垂直水平居中自动换行(tbl)
@@ -662,11 +662,11 @@ function 检维修日表() {
 
   //删掉无特殊作业行
   for (let i = 3, j = 0; i <= tbl.Rows.Count;) {
-    let tmp = tbl.Rows.Item(i).Columns.Item("K").Text
+    let tmp = curSheet.Rows.Item(i).Columns.Item("K").Text
 
     // 修改备注栏
-    let beizhu = tbl.Rows.Item(i).Columns.Item("O").Text
-    tbl.Rows.Item(i).Columns.Item("O").Value2 = /是/.test(beizhu)?'是':'否'
+    let beizhu = curSheet.Rows.Item(i).Columns.Item("O").Text
+    curSheet.Rows.Item(i).Columns.Item("O").Value2 = /是/.test(beizhu)?'是':'否'
 
     // if(/无特殊/g.test(tmp)){
 	   //  tbl.Rows.Item(i).Delete()
@@ -678,8 +678,8 @@ function 检维修日表() {
     }
 
     if (/(特级|受限)/g.test(tmp)) {
-      tbl.Rows.Item(i).Columns.Item("B").Value2 = "**"
-      tbl.Rows.Item(i).Columns.Item("B").Font.Bold = true
+      curSheet.Rows.Item(i).Columns.Item("B").Value2 = "**"
+      curSheet.Rows.Item(i).Columns.Item("B").Font.Bold = true
     }
     i++
   }
@@ -1197,13 +1197,13 @@ function 备份工作表() {
 
 //拆分报表为单个日期的子Sheet表
 function 拆分表格(){
-  let {curSheet, tbl, col} = 获取有效表位置()
+  let {curSheet, tbl} = 获取有效表位置()
 
   /*函数废弃不用*/
   let HandlingProcess = function(sh, date1){
     sh.Select()
-    sh.Range("A3").Select()
-    let {curSheet, tbl, col} = 获取有效表位置()
+    sh.Range("B3").Select()
+    let {curSheet, tbl} = 获取有效表位置()
     for (let i = 3, id=1; i <= tbl.Rows.Count; ) {
       let start_t = tbl.Rows.Item(i).Columns.Item("K").Text.replaceAll('-','/')
       let end_t = tbl.Rows.Item(i).Columns.Item("L").Text.replaceAll('-','/')
@@ -1217,7 +1217,6 @@ function 拆分表格(){
       i++
     }
   }
-
 
   let riqi_container = []
   for (let i = 3; i <= tbl.Rows.Count; i++) {
@@ -1330,7 +1329,7 @@ function 动火受限(pattern_str = '(动火|受限)') {
 
   //保留动火受限行
   for (let i = 3; i <= tbl.Rows.Count;) {
-    let tmp = tbl.Rows.Item(i).Columns.Item(col).Text
+    let tmp = curSheet.Rows.Item(i).Columns.Item(col).Text
 
     // tbl.Rows.Item(i).Columns.Item("A").Value2 = ""
     if (/特级/.test(tmp)) {
@@ -1346,7 +1345,7 @@ function 动火受限(pattern_str = '(动火|受限)') {
     }
 
     if (new RegExp(pattern_str, 'g').test(tmp)) {} else {
-      tbl.Rows.Item(i).Delete()
+      curSheet.Rows.Item(i).Delete()
       continue
       //因为删除之后,下面行上移,所以i不用改变
     }
