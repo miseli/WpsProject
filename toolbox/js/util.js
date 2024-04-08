@@ -12,13 +12,41 @@
 // })
 
 
-// $$('span:contains("确认审核")').each((id,item)=>{
+
+// let nbtn = $$(`<button>一键确认</button>`)
+// $$('body').append(nbtn)
+// nbtn.attr('style',`color: white;background: #006158; border-radius: 3px; width: 76px; height: 34px; right: 0px; bottom: 30px; position: absolute; z-index: 99999; border: #cecfcf solid 1px; `)
+// nbtn.click(function(){
+//   let req = []
+//   $$('span:contains("确认审核")').each((id,item)=>{
 //     let url = $$(item).parent('a').data('url')
-//   let parentid = url.match(/\/CommonBiz\/DTWorkBackupMainForm\/Excute\/(.+)\?op=QueRen/)[1]
-//   $axios.post('/DTWorkBackup/BatchUpQueRen', $qs.stringify({parentid})).then(res=>{
-//     console.log(res)
+//     let parentid = url.match(/\/CommonBiz\/DTWorkBackupMainForm\/Excute\/(.+)\?op=QueRen/)[1]
+//     req.push($axios.post('/DTWorkBackup/BatchUpQueRen', $qs.stringify({parentid})))
 //   })
+//   $axios.all(req).then($axios.spread(()=>{
+//     console.log('所有都成功了', arguments)
+//     alert('成功')
+//   }))
+//   .catch(errors => {
+//     // 如果任何请求失败，处理错误
+//     console.log('有请求失败了:', errors);
+//   });
 // })
+
+
+
+
+
+
+// function splitStringBy19Chars(str) {
+//     // 使用正则表达式匹配每19个字符，并加上捕获组
+//     const regex = /(.{1,19})/g;
+//     return str.match(regex);
+// }
+
+// const str = '三十防：防碰撞打击，防静电，防雷电，防装置带病运行，防腐蚀，防火花喷溅，防超温超压，防高压窜低压，防物料残留，防危化品泄漏，防误操作，防爆聚，防自聚，防超能力生产，防非正常化学反应，防危化品超流速，防冻凝，防气蚀，防物料错加，防危化品喷溅，防管道介质水击，防物料混存，防超量存储，防超员，防粉尘，防中毒窒息，防辐射，防异味逸散，防排放超标，防三违。';
+// const groups = splitStringBy19Chars(str);
+// copy(groups)
 
 
 // function DoConverseCallTimer() {
@@ -603,7 +631,7 @@ function 重点检维修分享() {
 		// curSheet.Rows.Item(i).Columns.Item("K").Select()
     // curSheet.Rows.Item(i).Columns.Item("A").Value2 = ""
 
-    curSheet.Rows.Item(i).Columns.Item("O").Value2 = /是/.test(curSheet.Rows.Item(i).Columns.Item("O").Text)?1:0
+    curSheet.Rows.Item(i).Columns.Item("O").Value2 = /是/.test(curSheet.Rows.Item(i).Columns.Item("O").Text)?1:''
 
     if (/(特级|受限)/.test(tmp)) {
       //涂黄
@@ -666,7 +694,7 @@ function 检维修日表() {
 
     // 修改备注栏
     let beizhu = curSheet.Rows.Item(i).Columns.Item("O").Text
-    curSheet.Rows.Item(i).Columns.Item("O").Value2 = /是/.test(beizhu)?'是':'否'
+    curSheet.Rows.Item(i).Columns.Item("O").Value2 = /是/.test(beizhu)?'是':''
 
     // if(/无特殊/g.test(tmp)){
 	   //  tbl.Rows.Item(i).Delete()
@@ -1002,12 +1030,13 @@ async function 线上风险研判() {
 function 离线风险研判() {
   let {curSheet, tbl} = 获取有效表位置()
   let logmsg = []
-  let checkfun = (person,jiezhi,jibie,start_t,end_t, tbl, i)=>{
+  let checkfun = (obj)=>{
+    let {person,jiezhi,jibie,start_t,end_t, tbl, i, fuzeren, chejian} = obj
     //标记错误行为红色
     if(
       person.length<4 ||
       (
-        /火/.test(jibie) &&
+        /[火受]/.test(jibie) &&
         (
           /无/.test(jiezhi) ||
           !/(是|否)$/.test(person) ||
@@ -1030,31 +1059,31 @@ function 离线风险研判() {
       //标记具体哪个单元格错误
       if((/无/.test(jiezhi) && /火/.test(jibie))){
         背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('G'))
-        logmsg.push(`<i data-pos="G${i}">G${i}：介质不允许填无</i>`)
+        logmsg.push(`<i data-pos="G${i}">G${i}：${chejian} 介质不允许填无</i>`)
       }
 
       if(person.length<4){
         背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('N'))
         // logmsg.push(`N${i}：备注栏信息不全`)
-        logmsg.push(`<i data-pos="N${i}">N${i}：备注栏信息不全</i>`)
+        logmsg.push(`<i data-pos="N${i}">N${i}：${chejian} 备注栏信息不全</i>`)
       }
 
       if(!/(是|否)$/.test(person.replace(/[\r\n]*$/g,''))){
         背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('N'))
         // logmsg.push(`N${i}：没有备注是否录像`)
-        logmsg.push(`<i data-pos="N${i}">N${i}：没有备注是否录像</i>`)
+        logmsg.push(`<i data-pos="N${i}">N${i}：${chejian} 没有备注是否录像</i>`)
       }
 
       if(/[\r\n]/.test(person.replace(/[\r\n]*$/g,''))){
         背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('N'))
         // logmsg.push(`N${i}：备注栏中有换行`)
-        logmsg.push(`<i data-pos="N${i}">N${i}：备注栏中有换行</i>`)
+        logmsg.push(`<i data-pos="N${i}">N${i}：${chejian} 备注栏中有换行</i>`)
       }
 
       if(!/作\s*业\s*\d+\s*人\s*/.test(person)){
         背景填充(0x00ff00, tbl.Rows.Item(i).Columns.Item('N'))
         // logmsg.push(`N${i}：作业N人后无冒号或未填写人数`)
-        logmsg.push(`<i data-pos="N${i}">N${i}：作业N人后无冒号或未填写人数</i>`)
+        logmsg.push(`<i data-pos="N${i}">N${i}：${chejian} 作业N人后无冒号或未填写人数</i>`)
       }
 
       if(new Date(end_t).getHours()>=18){
@@ -1078,6 +1107,28 @@ function 离线风险研判() {
         logmsg.push(`<i data-pos="K${i}:L${i}">K${i}L${i}：开始时间晚于结束时间</i>`)
       }
     }
+
+    // 特级动火负责人必须是主任
+    chejianfuzeren = {
+      "乙烯车间": '刘偲',
+      "聚乙烯一车间": '庄松',
+      "聚丙烯一车间": '廉强',
+      "聚丙烯二车间": '廉强',
+      "苯乙烯一车间": '宋晗',
+      "加氢抽提联合车间": '李玉忠',
+      "聚苯乙烯车间": '王春',
+      "水汽车间": '吴春明',
+      "储运车间": '李元元',
+      "仪表车间": '肖永峰',
+      "电气车间": '吕涛',
+      "成品车间": '王强'
+    }
+    if(/[火受]/.test(jibie)){
+      if(!new RegExp(fuzeren,'g').test(chejianfuzeren[chejian])){
+        背景填充(0x0000ff, tbl.Rows.Item(i).Columns.Item('M'))
+        logmsg.push(`<i data-pos="M${i}">M${i}：负责人应该是<b data-pos="M${i}" style="color:red" >${chejianfuzeren[chejian]}</b></i>`)
+      }
+    }
   }
   // if(tbl.Rows.Count==tbl.Columns.Count) 无作业
 
@@ -1090,13 +1141,15 @@ function 离线风险研判() {
         level = obj.Item("J").Text.replace(/[\r\n\t,，]/g, ',')
       levels.push(level)
     })(tbl.Rows.Item(i).Columns)
+    let chejian = tbl.Rows.Item(i).Columns.Item("D").Text.replace(/[\r\n\t,，]/g, '')
+    let fuzeren = tbl.Rows.Item(i).Columns.Item("M").Text.replace(/[\r\n\t,，]/g, '')
     let person = tbl.Rows.Item(i).Columns.Item("N").Text
     let jiezhi = tbl.Rows.Item(i).Columns.Item("G").Text
     let jibie = tbl.Rows.Item(i).Columns.Item("J").Text
     let start_t = tbl.Rows.Item(i).Columns.Item("K").Text.replaceAll('-','/')
     let end_t = tbl.Rows.Item(i).Columns.Item("L").Text.replaceAll('-','/')
 
-    checkfun(person.replace(/\s*$/g,''),jiezhi,jibie,start_t,end_t, tbl, i)
+    checkfun({person: person.replace(/\s*$/g,''), jiezhi, jibie, start_t, end_t, tbl, i, fuzeren, chejian})
 
   }
   let riqi = new Date(tbl.Rows.Item(line).Columns.Item("K").Text).format('yyyy-MM-dd') + '至' + new Date(tbl.Rows.Item(line).Columns.Item("L").Text).format('yyyy-MM-dd')

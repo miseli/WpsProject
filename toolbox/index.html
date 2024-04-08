@@ -1,22 +1,220 @@
 <!DOCTYPE html>
 <html>
-    <head>
+
+<head>
     <meta charset="utf-8">
     <script type="text/javascript" src="./js/jquery.min.js"></script>
     <script type="text/javascript" src="./js/axios.min.js"></script>
     <script type="text/javascript" src="./main.js"></script>
+    <script src="./js/compressImage/spark-md5.min.js"></script>
+    <script src="./js/compressImage/crypto-js.min.js"></script>
+    <script type="text/javascript" src="./js/compressImage/compressImage.js"></script>
     <style>
-        div{
+        div.header{
             font-size:6vw;
+        }
+        div.container{
             display: flex;
             justify-content: center;
+            flex-direction: column;
+            align-items: center;
+        }
+        ul {
+            list-style-type: none; /* 移除默认的列表样式 */
+            padding: 0; /* 移除默认的列表内边距 */
+            margin: 0; /* 移除默认的列表外边距 */
+            min-width: 95%;
+        }
+
+        li {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px; /* 设置列表项的内边距 */
+            margin-bottom: 5px; /* 设置列表项之间的垂直间距 */
+            background-color: #f5f5f5; /* 设置列表项的背景颜色 */
+            border-radius: 5px; /* 设置列表项的边框圆角 */
+            font-size: 16px; /* 设置列表项的字体大小 */
+            color: #333; /* 设置列表项的文字颜色 */
+            transition: background-color 0.3s ease; /* 添加背景颜色过渡效果 */
+        }
+
+        li:hover {
+            background-color: #ddd; /* 鼠标悬停时改变背景颜色 */
+            cursor: pointer; /* 鼠标悬停时显示手型光标 */
+        }
+
+        .delete-btn {
+           font-size: 1.2rem;
+           font-weight: bold;
+           color: red;
+           cursor: pointer;
+           position: relative;
+           top: -0.5rem; /* 调整位置，使X按钮在文本旁边 */
+           right: -0.5rem; /* 同上 */
+        }
+
+        .dropzone {
+            /* line-height: 60px; */
+            cursor: pointer;
+            /*white-space: pre;*/
+            /* white-space: pre-wrap; */
+            min-width: 600px;
+            min-height: 100px;
+            border: 2px dashed #ccc;
+            user-select: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 0px 10px;
+            margin: 20px;
+        }
+
+        .dragover {
+            border-color: green;
+        }
+
+        .dragging {
+            opacity: 0.5;
+        }
+
+        .uploadicon {
+            min-height: 12px;
+            vertical-align: baseline;
+        }
+
+        @font-face {
+            font-family: 'oswaldicon2';
+            src: url('./js/compressImage/oswaldicon2.woff2');
+        }
+
+        .uploadicon:before {
+            text-align: center;
+            content: '\2601';
+            font-size: 1.5em;
+            color: #4a4;
+            font-family: oswaldicon2,sans-serif;
+            display: inline-block;
+            font-style: normal;
+            font-variant: normal;
+            text-rendering: auto;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        span#span_text, .header > span{
+            color: #4A4;
+            font-weight: bold;
+            white-space: pre;
+        }
+
+        .buttonicon {
+            margin-bottom: 15px;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        button[onClick] {
+            border: 0px solid #eaeaea;
+        }
+        .gradientred {
+            padding: 1em 0.9em;
+            min-width: 600px;
+            min-height: 55px;
+            font-family: Oswald, helvetica, arial, sans-serif;
+            font-size: 22px;
+            background: linear-gradient(to bottom, #f36d64 0%,#d01d10 100%);
+            border: 1px solid #d01d10 !important;
+            outline: 0;
+            color: white;
+            padding: 0.3em 2em;
+            margin: 5px;
+            cursor: pointer;
+            display: inline-block;
+            text-align: center;
+            border-radius: 3px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .editicon {
+            margin:5px;
+            width: 55px;
+            height: 55px;
+            background: url(https://fontmeme.com/assets/editicon.png) no-repeat;
+            opacity: 0.8;
+            cursor: pointer;
+            background-size: contain;
+        }
+
+        span.left, span.right{
+
+        }
+        table{
+            margin-top: 20px;
+        }
+
+        .fdecs {
+            display: inline-block;
+            height: 10px;
+            width: 12px;
+            background-image: url(/js/compressImage/upload_cancel.gif);
+            font-size: 0;
+            /*opacity: 0.39;*/
+            opacity: 0.6;
+            zoom: 150%;
+            margin: 0 3px;
         }
     </style>
-    </head>
-    <body>
-        <div>
-            <span style="color:red">wps </span>toolbox service
+</head>
+
+<body style="background-color: #4f4f4f;">
+    <div class="container">
+        <div class="header">
+            <span style="color:red">wps </span><span>toolbox service</span>
         </div>
-    </body>
+        <div style="font-size: 39px;color: white;font-weight: bold;margin: 10px;">门禁照片处理工具</div>
+        <!-- <div class="left"> -->
+        <div class="dropzone information" id="dropzone">
+            <form id="myForm">
+                <input type="file" class="imageUpload" id="imageUpload" hidden multiple accept="image/*" />
+            </form>
+            <div style="display:flex;margin: 10px 0px;">
+                <div class="uploadicon"></div>
+                <span id="span_text">  双击、拖拽图片、粘贴图片到这里上传</span>
+            </div>
+            <ul class="ulclass" id="ulclass">
+            </ul>
+        </div>
+        <div class="buttonicon">
+            <div id="updator" style="display:inline;">
+                <button class="gradientred" onclick="btnClickEvent()" title="批量下载">确认</button>
+            </div>
+        </div>
+    </div>
+    <!-- </div> -->
+</body>
+<script>
+
+
+// 单击移除文件显示
+let uls = document.getElementsByClassName('ulclass')
+for (let ul of uls) {
+    ul.addEventListener('dblclick', function(e){
+        e.stopPropagation();
+
+        let el = e.target
+        if(el.tagName.toLowerCase() !== 'li'){
+            el = el.parentNode
+        }
+
+        let file = el.file
+        downloadfile(file, replaceFileExtension(file.name,'jpg'))
+    })
+}
+dropstart()
+</script>
+
 </html>
 <!--这个文件是wps加载项的入口文件，wps在启动时加载这个文件-->
