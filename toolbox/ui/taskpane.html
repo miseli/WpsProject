@@ -9,9 +9,7 @@
 <head>
 	<title>风险研判</title>
 	<meta charset="utf-8">
-	<!--     <link rel="stylesheet" href="../js/layui.css" type="text/css" media="all">
-<link rel="stylesheet" href="../js/webframecss@v=1.0.0.css" type="text/css" media="all"> -->
-	<link rel="stylesheet" href="../js/codemirror.bundle.css" type="text/css" media="all">
+	<link rel="stylesheet" href="../js/lib/codemirror.bundle.css" type="text/css" media="all">
 	<style>
 		.cm-activeLine.cm-line, .cm-activeLineGutter{
 			background-color: rgb(143 218 255 / 27%) !important;
@@ -19,11 +17,6 @@
 
 	</style>
 </head>
-<script type="text/javascript" src="../js/jquery.min.js"></script>
-<script type="text/javascript" src="../js/axios.min.js"></script>
-<script type="text/javascript" src="../js/codemirror.bundle.js"></script>
-<script type="text/javascript" src="../js/util.js"></script>
-<script type="text/javascript" src="../js/dialog.js"></script>
 <script type="text/javascript" src="../.debugTemp/wpsjsrpcsdk.js"></script>
 
 <body>
@@ -54,7 +47,7 @@
 					<button data-action="作业统计" title="统计所有作业"></button>
 					<button data-action="早会统计" title="统计电气焊动火作业受限作业"></button>
 					<!-- <button data-action="卡具统计" title="统计卡具台账"></button> -->
-					<button data-action="统计日期" title="根据作业日期统计所有作业日期"></button>
+					<!-- <button data-action="统计日期" title="根据作业日期统计所有作业日期"></button> -->
 					<br />
 					<!-- <button data-action="研判签到表"></button> -->
 					<!-- <button data-action="统计属地车间"></button> -->
@@ -63,7 +56,7 @@
 					<!-- <button data-action="自动列宽"></button> -->
 					<!-- <button data-action="垂直水平居中自动换行"></button> -->
 				</div>
-				<span style="color: gray" onclick="shellExecuteByOAAssist(this.innerText)">http://127.0.0.1:3889/ui/dialog.html</span>
+				<span style="color: gray" id="demospan" onclick="">http://127.0.0.1:3889/ui/dialog.html</span>
 				<br />
 				<span id="word_url" onclick="shellExecuteByOAAssist(this.dataset.url)"></span>
 				<span id="signexport" onclick="shellExecuteByOAAssist(this.dataset.url)"></span>
@@ -114,6 +107,7 @@
 .child {
 	display: flex;
 	/*width: 50%;*/
+	flex-direction: column;
 }
 
 div.left,
@@ -141,6 +135,7 @@ div.right {
 #text_p2,
 #log_text {
 	white-space: pre;
+	padding-bottom: 10px;
 	/*white-space:nowrap;*/
 	/*white-space: pre-line;*/
 	/*width: 50%;*/
@@ -164,5 +159,11 @@ div.right {
 	justify-content: flex-end;
 }
 </style>
-
+<!-- <script src="../js/lib/vconsole.min.js"></script> -->
+<script src="../js/lib/jquery.min.js"></script>
+<script src="../js/lib/axios.min.js"></script>
+<script src="../js/lib/sweetalert2.all.min.js"></script>
+<script src="../js/lib/codemirror.bundle.js"></script>
+<script src="../js/src/util.js"></script>
+<script src="../js/src/dialog.js"></script>
 </html>

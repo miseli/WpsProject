@@ -3,8 +3,8 @@ window.onload = () => {
 	var url = location.origin + "/.debugTemp/NotifyDemoUrl"
 	xmlReq.open("GET", url);
 	xmlReq.onload = function(res) {
-		var node = document.getElementById("DemoSpan");
-		window.document.getElementById("DemoSpan").innerHTML = res.target.responseText;
+		var node = document.getElementById("demospan");
+		node.innerHTML = res.target.responseText;
 	};
 	xmlReq.send();
 }

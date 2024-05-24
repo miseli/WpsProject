@@ -1,14 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <meta charset="utf-8">
-    <script type="text/javascript" src="./js/jquery.min.js"></script>
-    <script type="text/javascript" src="./js/axios.min.js"></script>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <script type="text/javascript" src="./js/lib/jquery.min.js"></script>
+    <script type="text/javascript" src="./js/lib/axios.min.js"></script>
+    <script type="text/javascript" src="./js/lib/sweetalert2.all.min.js"></script>
+    <script type="text/javascript" src="./js/lib/compressImage/compressImage.js"></script>
+    <script src="./js/lib/compressImage/spark-md5.min.js"></script>
+    <script src="./js/lib/compressImage/crypto-js.min.js"></script>
+
     <script type="text/javascript" src="./main.js"></script>
-    <script src="./js/compressImage/spark-md5.min.js"></script>
-    <script src="./js/compressImage/crypto-js.min.js"></script>
-    <script type="text/javascript" src="./js/compressImage/compressImage.js"></script>
     <style>
         div.header{
             font-size:6vw;
@@ -87,7 +92,7 @@
 
         @font-face {
             font-family: 'oswaldicon2';
-            src: url('./js/compressImage/oswaldicon2.woff2');
+            src: url('./js/lib/compressImage/oswaldicon2.woff2');
         }
 
         .uploadicon:before {
@@ -159,7 +164,7 @@
             display: inline-block;
             height: 10px;
             width: 12px;
-            background-image: url(/js/compressImage/upload_cancel.gif);
+            background-image: url(/js/lib/compressImage/upload_cancel.gif);
             font-size: 0;
             /*opacity: 0.39;*/
             opacity: 0.6;
@@ -214,6 +219,46 @@ for (let ul of uls) {
     })
 }
 dropstart()
+
+
+
+
+function downloadCSV(data, filename) {
+  const csv = convertToCSV(data); // 将数据转换为CSV格式
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); // 创建Blob对象
+  const link = document.createElement('a'); // 创建一个<a>元素
+  if (link.download !== undefined) { // 支持download属性的浏览器
+    const url = URL.createObjectURL(blob); // 生成下载链接
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link); // 将<a>元素添加到页面中
+    link.click(); // 模拟点击下载链接
+    document.body.removeChild(link); // 下载完成后移除<a>元素
+  }
+}
+
+function convertToCSV(data) {
+  const rows = [];
+  for (let i = 0; i < data.length; i++) {
+    const row = [];
+    for (let key in data[i]) {
+      if (data[i].hasOwnProperty(key)) {
+        row.push(data[i][key]);
+      }
+    }
+    rows.push(row.join(','));
+  }
+  return rows.join('\n');
+}
+
+// const data = [
+//   { xingming, zuzhi, start_t, end_t }
+// ];
+
+// downloadCSV(data, 'data.csv');
+
+
 </script>
 
 </html>

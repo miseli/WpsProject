@@ -138,6 +138,9 @@ CodeMirror.defaultconfig = function(){
 }
 window.CodeMirror = CodeMirror
 
-// CodeMirror({doc:`console.log('hello')
+// let editor = CodeMirror({doc:`console.log('hello')
 //   123456789012345678900123456789123456789012345678900123456789123456789012345678900123456789123456789012345678900123456789123456789012345678900123456789123456789012345678900123456789
 //   123`})
+// console.log(editor.state.doc.toString())
+// 修改
+// editor.dispatch({changes: {from: 0, to: editor.state.doc.length, insert: "editor"}})
