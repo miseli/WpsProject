@@ -1,11 +1,7 @@
-window.alert = function(a){
-  Swal.fire({
-      title: a,
-      icon: 'error',
-      confirmButtonText: 'OK'
-  });
-}
 let vip = 0, editor = ''
+// vip = 1
+
+
 // axios.post('http://127.0.0.1:8010/tp6/public/Index/excelwordmiddle',{url:param})
 // $$('tr.item>td:nth-child(3)').each((id, item)=>{
 //     if(/(加氢芳烃一|裂解|乙烯二|加氢芳烃二|苯乙烯二|聚乙烯二|中心化验)/.test($$(item).text())){
@@ -97,7 +93,7 @@ const mappingObj = {
     "聚丙烯二车间": "9698",
     "水汽车间": "7130",
     "安环处5": "1877",
-    "乙烯车间": "0332" // 1877
+    "安环处3": "0332" // 1877
 }
 
 /**
@@ -1111,14 +1107,15 @@ function 离线风险研判() {
     if(
       person.length<4 ||
       (
+        (((/高处[特三四]级/.test(jibie)) || (/(动土|断路)/.test(jibie)) || ((/吊装[一二三]级/.test(jibie)) && (!/10吨/.test(jibie))) || (/(特级)/.test(jibie)) || (/受限/.test(jibie))) && (!/是/.test(person))) ||
         /[火受]/.test(jibie) &&
         (
-          ((!/空气|水|无|蒸汽/.test(jiezhi)) && (!/特级/.test(jibie))) ||
+          ((!/空气|水|无|蒸汽/.test(jiezhi)) && (!/特级/.test(jibie)) && (!/非明火/.test(person)) && (/(炉|H-\d\d\d\d)/.test(content)) && (/火/.test(jibie))) ||
+          // (/火/.test(jibie) && !/工具/.test(content)) ||
+          // !/(是|否)/.test(person) ||
+           (/火/.test(jibie) && !/(明火)/.test(person)) ||
           /无/.test(jiezhi) ||
-          !/工具/.test(content) ||
-          !/(是|否)/.test(person) ||
-          !/(明火)/.test(person) ||
-          /[\r\n]/.test(person) ||
+          // /[\r\n]/.test(person) ||
           !/作\s*业\s*\d+\s*人\s*/.test(person) ||
           (
             new Date(end_t).getHours()>=18 ||
@@ -1131,13 +1128,42 @@ function 离线风险研判() {
         )
       )
     ){
-
       // 背景填充(0x0000ff, tbl.Rows.Item(i)) //涂红
 
+      if(person.length<4){
+        背景填充(0xffff00, columns.Item('N'.distance(col)))
+        // logmsg.push(`N${i}：备注栏信息不全`)
+        logmsg.push(`<i data-pos="${'N'.distance(col)}${i}">${'N'.distance(col)}${i}：${chejian} 备注栏信息不全</i>`)
+      }
+
+      // 检查哪些作业必须录像
+      if (((/高处[特三四]级/.test(jibie)) || (/(动土|断路)/.test(jibie)) || ((/吊装[一二三]级/.test(jibie)) && (!/10吨/.test(jibie))) || (/(特级)/.test(jibie)) || (/受限/.test(jibie))) && (!/是/.test(person))) {
+        背景填充(0x00ff00, columns.Item('N'.distance(col)))
+        // logmsg.push(`N${i}：备注栏信息不全`)
+        logmsg.push(`<i data-pos="${'N'.distance(col)}${i}">${'N'.distance(col)}${i}：${chejian} <b>必须录像</b></i>`)
+      }
+
       // 裂解炉可燃介质工艺管线的动火应是特级
-      if((!/空气|水|无|蒸汽/.test(jiezhi)) && (!/特级/.test(jibie))){
+      if ((!/空气|水|无|蒸汽/.test(jiezhi)) && (!/特级/.test(jibie)) && (!/非明火/.test(person)) && (/(炉|H-\d\d\d\d)/.test(content)) && (/火/.test(jibie))) {
         背景填充(0x0000ff, columns.Item('J'.distance(col)))
         logmsg.push(`<i data-pos="${'J'.distance(col)}${i}">${'J'.distance(col)}${i}： <b>炉区工艺管线</b>应是特级动火</i>`)
+      }
+
+      // if(/火/.test(jibie) && !/工具/.test(content)){
+      //   背景填充(0x00ff00, columns.Item('F'.distance(col)))
+      //   logmsg.push(`<i data-pos="${'F'.distance(col)}${i}">${'F'.distance(col)}${i}：${content} 作业内容没标明<b>工具</b></i>`)
+      // }
+
+      // if(!/(是|否)/.test(person.replace(/[\r\n]*$/g,''))){
+      //   背景填充(0x00ff00, columns.Item('N'.distance(col)))
+      //   // logmsg.push(`N${i}：没有备注是否录像`)
+      //   logmsg.push(`<i data-pos="${'N'.distance(col)}${i}">${'N'.distance(col)}${i}：${chejian} 没有备注是否<b>录像</b></i>`)
+      // }
+
+      if (/火/.test(jibie) && !/(明火)/.test(person)) {
+        背景填充(0x00ff00, columns.Item('N'.distance(col)))
+        // logmsg.push(`N${i}：没有备注是否录像`)
+        logmsg.push(`<i data-pos="${'N'.distance(col)}${i}">${'N'.distance(col)}${i}：${chejian} 没有备注是否<b>明火</b></i>`)
       }
 
       //标记具体哪个单元格错误
@@ -1147,34 +1173,10 @@ function 离线风险研判() {
         logmsg.push(`<i data-pos="${'G'.distance(col)}${i}">${'G'.distance(col)}${i}：${chejian} <b>介质</b>不允许填无</i>`)
       }
 
-      if(/火/.test(jibie) && !/工具/.test(content)){
-        背景填充(0x00ff00, columns.Item('F'.distance(col)))
-        logmsg.push(`<i data-pos="${'F'.distance(col)}${i}">${'F'.distance(col)}${i}：${content} 作业内容没标明<b>工具</b></i>`)
-      }
-
-      if(person.length<4){
-        背景填充(0x00ff00, columns.Item('N'.distance(col)))
-        // logmsg.push(`N${i}：备注栏信息不全`)
-        logmsg.push(`<i data-pos="${'N'.distance(col)}${i}">${'N'.distance(col)}${i}：${chejian} 备注栏信息不全</i>`)
-      }
-
-      if(!/(是|否)/.test(person.replace(/[\r\n]*$/g,''))){
-        背景填充(0x00ff00, columns.Item('N'.distance(col)))
-        // logmsg.push(`N${i}：没有备注是否录像`)
-        logmsg.push(`<i data-pos="${'N'.distance(col)}${i}">${'N'.distance(col)}${i}：${chejian} 没有备注是否<b>录像</b></i>`)
-      }
-
-      if(/火/.test(jibie) && !/(明火)/.test(person)){
-        背景填充(0x00ff00, columns.Item('N'.distance(col)))
-        // logmsg.push(`N${i}：没有备注是否录像`)
-        logmsg.push(`<i data-pos="${'N'.distance(col)}${i}">${'N'.distance(col)}${i}：${chejian} 没有备注是否<b>明火</b></i>`)
-      }
-
-      if(/[\r\n]/.test(person.replace(/[\r\n]*$/g,''))){
-        背景填充(0x00ff00, columns.Item('N'.distance(col)))
-        // logmsg.push(`N${i}：备注栏中有换行`)
-        logmsg.push(`<i data-pos="${'N'.distance(col)}${i}">${'N'.distance(col)}${i}：${chejian} 备注栏中有换行</i>`)
-      }
+      // if(/[\r\n]/.test(person.replace(/[\r\n]*$/g,''))){
+      //   背景填充(0x00ff00, columns.Item('N'.distance(col)))
+      //   logmsg.push(`<i data-pos="${'N'.distance(col)}${i}">${'N'.distance(col)}${i}：${chejian} 备注栏中有换行</i>`)
+      // }
 
       if(!/作\s*业\s*\d+\s*人\s*/.test(person)){
         背景填充(0x00ff00, columns.Item('N'.distance(col)))
@@ -1206,7 +1208,7 @@ function 离线风险研判() {
 
     // 特级动火负责人必须是主任
     chejianfuzeren = {
-      "乙烯车间": '刘偲',
+      "乙烯车间": '申辉',
       "聚乙烯一车间": '庄松',
       "聚丙烯一车间": '廉强',
       "聚丙烯二车间": '廉强',
@@ -1254,13 +1256,11 @@ function 离线风险研判() {
     let content = obj.Item("F".distance(col)).Text.replace(/\s/g,'')
 
     if(vip){
-      debugger
       checkfun({person: person.replace(/\s*$/g,''), jiezhi, jibie, start_t, end_t, curSheet, i, fuzeren, chejian, content})
     }
 
     /* =================================================================== */
     if(vip){
-      debugger
       jibie = obj.Item("J".distance(col)).Text.replace(/[\r\n\t,，]/g, ',').replace('高处特级', '高处四级')
       content = content.replace(/\s/g, '').replace(/工具.+$/g,'')
       pos = pos.replace(/\s/g, '')
@@ -1398,6 +1398,11 @@ function 备份工作表() {
 function 拆分表格(){
   if(!vip){
     alert('内存不足')
+    // Swal.fire({
+    //   text: '内存不足',
+    //   icon: 'error',
+    //   confirmButtonText: 'OK'
+    // })
     return;
   }
   let {curSheet, tbl, row, col} = 获取有效表位置()
@@ -1440,10 +1445,7 @@ function 拆分表格(){
   for(let i=0; i<uniqueArray.length; i++){//第一个是备份表,从第二个开始处理
     HandlingProcess(Application.Sheets.Item(i+2), uniqueArray[i])
   }
-  Swal.fire({
-    title: 123,
-    text: 456
-  })
+
   let a = Application.Sheets.Item(2).Select()
 }
 
@@ -1649,10 +1651,15 @@ $(function() {
       let clickTimeout;
 
       return function(...args) {
+        const e = args[0]
+        if(args[0].target.tagName=='B'){
+          e.stopPropagation();
+          return
+        }
         // 增加点击计数
         clickCount++;
         clearTimeout(clickTimeout);
-        console.log(`鼠标点击${clickCount}次`)
+        console.log(`鼠标点击${e.target.tagName} ${clickCount} 次`)
 
         // 如果点击次数为3，则执行3连击的逻辑
         if (clickCount >= 4) {

@@ -9,54 +9,53 @@ const agent = new https.Agent({
 });
 
 function getTokenheaders(text, regex = /token":"(.*?)"/) {
-		let tokenMatch = text.match(regex);
-		let csrf = tokenMatch[1]
-		return {headers:{'X-CSRF-TOKEN': csrf}, httpsAgent: agent}
+	let tokenMatch = text.match(regex);
+	let csrf = tokenMatch[1]
+	return {headers:{'X-CSRF-TOKEN': csrf}, httpsAgent: agent}
 }
 
 async function login(username = "乙烯管理员", password = 'A@1234567'){
 	let ret, data, headers
 	ret = await $axios.get('https://10.10.54.18/portal/cas/loginPage')
 	data = ret.data
-	
 
-		headers = getTokenheaders(data)
-		ret = await $axios.post('https://10.10.54.18/portal/login/ajax/postLoginData.do',{"userName":username},headers)
-		o = ret.data.data
+	headers = getTokenheaders(data)
+	ret = await $axios.post('https://10.10.54.18/portal/login/ajax/postLoginData.do',{"userName":username},headers)
+	o = ret.data.data
 
-			if(o.userType != "0"){
-				debugger
-				//var f = new JSEncrypt;
-				//f.setPublicKey(o.publicKey);
-				//password = f.encrypt(password)
-			}else{
-				password = $cryptojs.SHA256($cryptojs.SHA256(password + o.salt) + o.vCode).toString()
-			}
-			
-			let loginData = {
-				"userName": username,
-				"password": password,
-				"serviceUrl": "https://10.10.54.18/portal/cas/loginPage?service=https://10.10.54.18/portal/cas/loginPage",
-				"imageCode": "",
-				"codeId": o.codeId,
-				"userType": o.userType,
-				"systemCode": "0",
-				"lang": "zh_CN"
-			}
-			
-			ret = await $axios.post('https://10.10.54.18/portal/login/ajax/submit.do',loginData, headers)
-			if(!ret.data.success)return false
-			
-			console.log(ret.data)
-			// ret = await $axios.get(ret.data.data)
+		if(o.userType != "0"){
+			debugger
+			//var f = new JSEncrypt;
+			//f.setPublicKey(o.publicKey);
+			//password = f.encrypt(password)
+		}else{
+			password = $cryptojs.SHA256($cryptojs.SHA256(password + o.salt) + o.vCode).toString()
+		}
 
-			// ret = await $axios.get('https://10.10.54.18/portal/config',{headers: {Referer: 'https://10.10.54.18/portal/'}})
-			// ret = await $axios.get('https://10.10.54.18/xfront-web/view/foundation')
-			// data = ret.data
-			// headers = getTokenheaders(data, /"token".+?content="([^"]*)"/)
-			// return headers
+		let loginData = {
+			"userName": username,
+			"password": password,
+			"serviceUrl": "https://10.10.54.18/portal/cas/loginPage?service=https://10.10.54.18/portal/cas/loginPage",
+			"imageCode": "",
+			"codeId": o.codeId,
+			"userType": o.userType,
+			"systemCode": "0",
+			"lang": "zh_CN"
+		}
+
+		ret = await $axios.post('https://10.10.54.18/portal/login/ajax/submit.do',loginData, headers)
+		if(!ret.data.success)return false
+
+		console.log(ret.data)
+		// ret = await $axios.get(ret.data.data)
+
+		// ret = await $axios.get('https://10.10.54.18/portal/config',{headers: {Referer: 'https://10.10.54.18/portal/'}})
+		// ret = await $axios.get('https://10.10.54.18/xfront-web/view/foundation')
+		// data = ret.data
+		// headers = getTokenheaders(data, /"token".+?content="([^"]*)"/)
+		// return headers
 }
-let headers = login()
+let headers = await login()
 // console.log(headers)
 
 // dqkRyuP6-I0HLsFB7yM--rcTK885Ly-2Lf3A

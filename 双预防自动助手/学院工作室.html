@@ -1,0 +1,29 @@
+<!--
+* @Author: Cube
+* @Date:   2023-11-29 12:27:22
+* @Last Modified by:   Cube
+* @Last Modified time: 2023-12-01 14:22:14
+-->
+<html>
+    <body>
+<!--         <div id="lognote" style="position: absolute; background-color: rgb(133 133 133 / 48%); width: 280px; height: 400px; border-radius: 10px; white-space: pre; cursor: default; bottom: 5px; right: 5px; user-select: none;">
+            1.asdffffffffffff
+            2.asdfffffffffff
+            3.zxcvcvvvvvvvvvv
+        </div> -->
+    </body>
+    <script>
+            let lognote = `<div id="lognote" style="position: absolute; background-color: rgb(133 133 133 / 48%); width: 280px; height: 400px; border-radius: 10px; white-space: pre; cursor: default; bottom: 5px; right: 5px; user-select: none;">
+                1.asdffffffffffff
+                2.asdfffffffffff
+                3.zxcvcvvvvvvvvvv
+            </div>`
+        // }
+            lognote = $$(lognote)
+            lognote.dblclick
+            document.body.appendChild(lognote)
+            lognote.dblclick(function(){
+                console.log(123)
+            })
+    </script>
+</html>

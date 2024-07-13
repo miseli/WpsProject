@@ -12,28 +12,28 @@ window.token = ""
 
 // (function(){
     const mappingObj = {
-        "7676": "安环处1",
+        "7676": "录像设备1",
         "9409": "乙烯车间",
         //"4840": "7127B",
-        "7379": "安环处2",
+        "7379": "录像设备2",
         "5034": "加氢抽提联合车间",
         "2032": "聚丙烯一车间",
-        "0704": "安环处4",
+        "0704": "录像设备4",
         "2198": "苯乙烯车间",
         "1935": "聚乙烯车间",
         "6082": "储运车间",
         "9698": "聚丙烯二车间",
         "7130": "水汽车间",
-        "1877": "安环处5",
-        "0332": "安环处3"
+        "1877": "录像设备5",
+        "0332": "录像设备3"
     }
 
 
     const mapping = {
         "1877": {
             "uid": "1000002016040410163716642O4uGalW",
-            "nickName": "安环处5",
-            "devName": "安环处5"
+            "nickName": "录像设备5",
+            "devName": "录像设备5"
         },
         "1935": {
             "uid": "10000020160404101635138241RP5zMv",
@@ -72,13 +72,13 @@ window.token = ""
         },
         "7379": {
             "uid": "1000002016040410164039914l7Oj6Ph",
-            "nickName": "安环处2",
-            "devName": "安环处2"
+            "nickName": "录像设备2",
+            "devName": "录像设备2"
         },
         "7676": {
             "uid": "10000020160404101641133976jcJnmN",
-            "nickName": "安环处1",
-            "devName": "安环处1"
+            "nickName": "录像设备1",
+            "devName": "录像设备1"
         },
         "9409": {
             "uid": "1000002016040410163621610vf8vqwb",
@@ -92,13 +92,13 @@ window.token = ""
         },
         "0332": {
             "uid": "1000002016040410163817111AsIh1Ka",
-            "nickName": "安环处3",
-            "devName": "安环处3"
+            "nickName": "录像设备3",
+            "devName": "录像设备3"
         },
         "0704": {
             "uid": "10000020160404101637461490SqRw8G",
-            "nickName": "安环处4",
-            "devName": "安环处4"
+            "nickName": "录像设备4",
+            "devName": "录像设备4"
         }
     }
 
@@ -207,15 +207,15 @@ function updata_devName(search_id = '0--0', devName = '0--0', desc = '0--0', res
             return [Promise.reject(new Error(`设备ID:${search_id}不属于乙烯分公司`))]
         }
     }
-
+    desc = ''
     let ajax_updata = []
     if(!reset){
         ajax_updata.push(updataAjax(search_id, devName, desc))
-        // ajax_updata.push(updata_nickName(search_id, devName, desc))
+        ajax_updata.push(updata_nickName(search_id, devName, desc))
     }else{
         for(let key in mapping){
-            ajax_updata.push(updataAjax(key, `${mapping[key].devName.replace('车间','')}`, mapping[key].devName + ' t' + new Date().getTime()))
-            // ajax_updata.push(updata_nickName(key, `${mapping[key].devName.replace('车间','')}`, mapping[key].devName + ' t' + new Date().getTime()))
+            ajax_updata.push(updataAjax(key, `${mapping[key].devName.replace('车间','')}`, desc))
+            ajax_updata.push(updata_nickName(key, `${mapping[key].devName.replace('车间','')}`, desc))
         }
     }
     return ajax_updata
@@ -337,7 +337,7 @@ async function updata_nickName(devId, nickName) {
 //     -status: 2,
 //     +cameraId: "00000000000101010103000000020982",
 //     +devId: "sps20230719162942730VfVBsvkT9O1p",
-//     +devName: "乙烯安环处1",
+//     +devName: "乙烯录像设备1",
 //     +devStatus: 1,
 //     +devType: "4",
 //     +mainDevId: "00000000000101010101000000020981",
@@ -351,7 +351,7 @@ async function updata_nickName(devId, nickName) {
 //     -platId: "0000000000000101", //海洋王物联网平台(固定值)
 //     +cameraId: "00000000000101010103000000020982",
 //     +devId: "sps20230719162942730VfVBsvkT9O1p",
-//     +devName: "乙烯安环处1",
+//     +devName: "乙烯录像设备1",
 //     +devStatus: 1, // 固定值
 //     +devType: 4, // 固定值
 //     +mainDevId: "00000000000101010101000000020981",

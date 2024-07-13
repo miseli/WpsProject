@@ -3,27 +3,38 @@
 
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+    <script type="text/javascript" src="./js/lib/jszip.min.js"></script>
+    <script type="text/javascript" src="./js/lib/FileSaver.min.js"></script>
     <script type="text/javascript" src="./js/lib/jquery.min.js"></script>
     <script type="text/javascript" src="./js/lib/axios.min.js"></script>
     <script type="text/javascript" src="./js/lib/sweetalert2.all.min.js"></script>
     <script type="text/javascript" src="./js/lib/compressImage/compressImage.js"></script>
-    <script src="./js/lib/compressImage/spark-md5.min.js"></script>
-    <script src="./js/lib/compressImage/crypto-js.min.js"></script>
+    <script type="text/javascript" src="./js/lib/compressImage/spark-md5.min.js"></script>
+    <script type="text/javascript" src="./js/lib/compressImage/crypto-js.min.js"></script>
 
     <script type="text/javascript" src="./main.js"></script>
     <style>
-        div.header{
+        div.header {
             font-size:6vw;
         }
-        div.container{
+
+        div.container {
             display: flex;
             justify-content: center;
             flex-direction: column;
             align-items: center;
         }
+
+        @keyframes colorAnimation {
+            0% { background-color: #FF5722; }
+            50% { background-color: #ffaf95; }
+            100% { background-color: #FF5722; }
+        }
+
         ul {
             list-style-type: none; /* 移除默认的列表样式 */
             padding: 0; /* 移除默认的列表内边距 */
@@ -48,6 +59,16 @@
         li:hover {
             background-color: #ddd; /* 鼠标悬停时改变背景颜色 */
             cursor: pointer; /* 鼠标悬停时显示手型光标 */
+        }
+
+        li.warning {
+            background-color: #FF5722; /* 鼠标悬停时改变背景颜色 */
+            /* 设置动画属性 */
+            animation: colorAnimation 0.5s infinite;
+        }
+
+        li.warning:hover {
+            background-color: #ffaf95; /* 鼠标悬停时改变背景颜色 */
         }
 
         .delete-btn {
@@ -124,9 +145,10 @@
         button[onClick] {
             border: 0px solid #eaeaea;
         }
+
         .gradientred {
             padding: 1em 0.9em;
-            min-width: 600px;
+            /*min-width: 300px;*/
             min-height: 55px;
             font-family: Oswald, helvetica, arial, sans-serif;
             font-size: 22px;
@@ -156,6 +178,7 @@
         span.left, span.right{
 
         }
+
         table{
             margin-top: 20px;
         }
@@ -171,6 +194,11 @@
             zoom: 150%;
             margin: 0 3px;
         }
+
+        .fdecs:hover {
+            opacity: 1;
+        }
+
     </style>
 </head>
 
@@ -181,7 +209,7 @@
         </div>
         <div style="font-size: 39px;color: white;font-weight: bold;margin: 10px;">门禁照片处理工具</div>
         <!-- <div class="left"> -->
-        <div class="dropzone information" id="dropzone">
+        <div class="dropzone information" id="dropzone" title="仅>=200k的图片将被处理">
             <form id="myForm">
                 <input type="file" class="imageUpload" id="imageUpload" hidden multiple accept="image/*" />
             </form>
@@ -194,7 +222,8 @@
         </div>
         <div class="buttonicon">
             <div id="updator" style="display:inline;">
-                <button class="gradientred" onclick="btnClickEvent()" title="批量下载">确认</button>
+                <!-- <button type="button" class="gradientred" onclick="btnClickEvent1()" title="图片将被改名处理后并加入导入清单,需要手动填写组织名称">改名批量处理1</button> -->
+                <button type="button" class="gradientred" onclick="btnClickEvent2()" title="图片按原名处理导出,">原名批量处理2</button>
             </div>
         </div>
     </div>
@@ -215,49 +244,17 @@ for (let ul of uls) {
         }
 
         let file = el.file
-        downloadfile(file, replaceFileExtension(file.name,'jpg'))
+        // saveAs(file, replaceFileExtension(file.name,'jpg'))
+        let fileinfo = getFileInfo(file.name)
+        let blob = el.blob
+        if(blob.size>=200*1024){
+            saveAs(blob, `${fileinfo.name}处理后仍大于200K.${fileinfo.ext}`)
+        }else{
+            saveAs(blob, replaceFileExtension(fileinfo.name,'jpg'))
+        }
     })
 }
 dropstart()
-
-
-
-
-function downloadCSV(data, filename) {
-  const csv = convertToCSV(data); // 将数据转换为CSV格式
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); // 创建Blob对象
-  const link = document.createElement('a'); // 创建一个<a>元素
-  if (link.download !== undefined) { // 支持download属性的浏览器
-    const url = URL.createObjectURL(blob); // 生成下载链接
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link); // 将<a>元素添加到页面中
-    link.click(); // 模拟点击下载链接
-    document.body.removeChild(link); // 下载完成后移除<a>元素
-  }
-}
-
-function convertToCSV(data) {
-  const rows = [];
-  for (let i = 0; i < data.length; i++) {
-    const row = [];
-    for (let key in data[i]) {
-      if (data[i].hasOwnProperty(key)) {
-        row.push(data[i][key]);
-      }
-    }
-    rows.push(row.join(','));
-  }
-  return rows.join('\n');
-}
-
-// const data = [
-//   { xingming, zuzhi, start_t, end_t }
-// ];
-
-// downloadCSV(data, 'data.csv');
-
 
 </script>
 

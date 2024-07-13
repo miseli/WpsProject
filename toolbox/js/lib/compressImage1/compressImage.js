@@ -23,8 +23,8 @@
         }
 
         function convertCSV(data_array){
-            let exportcsv_content = `字段说明： 1. *号为必填项； 2. 填写数字编码代替属性值； 3. 使用EXCEL编辑导入文件时，请将单元格的格式修改为文本格式，避免数字文本自动转换为科学计数文本；
-"   请输入1~32个字符；不能包含 ' / \  : * ? "" < > | 这些特殊字符。", 填写从选择导入的组织名称开始，至目标组织父组织的完整名称路径（例如：选择组织1进行导入，当前这条记录需要导入到组织1下的组织X，那么填写的信息为组织1/组织X）；,  内码为系统内部生成编码indexcode，系统根据内码来判断是新增还是修改，为空为新增，不空为修改；不为空时，非系统生成编码，视为无效数据,  111（身份证）、112（临时居民身份证）、113（户口簿）、114（军官证）、116（暂住证）、123（警官证）、131（工作证）、133（学生证）、335（驾驶证）、337（行驶证）、414（护照）、782（市民卡）、990（其它证件）,   1~20个字符；只允许输入数字和字母, 1~32个字符；只允许输入数字、字母和汉字,  1~20位数字,    人员姓名拼音,,
+            let exportcsv_content = `字段说明： 1. *号为必填项； 2. 填写数字编码代替属性值； 3. 使用EXCEL编辑导入文件时，请将单元格的格式修改为文本格式，避免数字文本自动转换为科学计数文本；,,,,,,,,,
+   请输入1~32个字符；不能包含 ' /   : * ? " < > | 这些特殊字符。, 填写从选择导入的组织名称开始，至目标组织父组织的完整名称路径（例如：选择组织1进行导入，当前这条记录需要导入到组织1下的组织X，那么填写的信息为组织1/组织X）；,  内码为系统内部生成编码indexcode，系统根据内码来判断是新增还是修改，为空为新增，不空为修改；不为空时，非系统生成编码，视为无效数据,  111（身份证）、112（临时居民身份证）、113（户口簿）、114（军官证）、116（暂住证）、123（警官证）、131（工作证）、133（学生证）、335（驾驶证）、337（行驶证）、414（护照）、782（市民卡）、990（其它证件）,   1~20个字符；只允许输入数字和字母, 1~32个字符；只允许输入数字、字母和汉字,  1~20位数字,    人员姓名拼音,,
     *姓名,    *组织路径,  内码, 证件类型,   证件号码,   *工号,    手机号码,   拼音, 生效日期,   失效日期\n`
             exportcsv_content += data_array.join('\n')
 
@@ -61,6 +61,16 @@
                     const bytes = new Uint8Array(arrayBuffer);
                     const len = bytes.byteLength;
 
+                    /**********判断图片是否是JPG************/
+                    let not_jpg = true
+                    // JPG 文件通常以 0xFF, 0xD8 开始
+                    if (bytes[0] === 0xFF && bytes[1] === 0xD8) {
+                        not_jpg = false;
+                    } else {
+                        not_jpg = true;
+                    }
+                    /**********判断图片是否是JPG************/
+
                     let i = 0;
                     while (i < len) {
                         spark.append(bytes.subarray(i, i + chunkSize)); // Append in chunks of 1MB
@@ -69,7 +79,8 @@
 
                     let md5str = spark.end()
                     file.md5str = md5str
-                    resolve(md5str);
+                    file.not_jpg = not_jpg
+                    resolve({md5str, not_jpg});
                 };
 
                 reader.onerror = (error) => {
@@ -109,10 +120,10 @@
             formData.append('fieldname', 'file1');
 
             for(let file of files){
-                let md5 = await md5_file(file)
-                console.log('文件MD5值:', file, md5);
+                let md5data = await md5_file(file)
+                console.log('文件MD5值:', file, md5data.md5str);
                 formData.append('file1[]', file);
-                formData.append('md5str[]', md5);
+                formData.append('md5str[]', md5data.md5str);
             }
 
             // http://127.0.0.1:8010/tp6/public/personcontroller/upload
@@ -279,10 +290,11 @@
                         alert('无文件')
                         return;
                     }
-
+                    // 先清空列表
+                    document.getElementById('ulclass').innerHTML = ''
+                    // 逐个添加
                     for(let file of files){
-                        let md5str = await md5_file(file)
-                        file.md5 = md5str
+                        await md5_file(file)
                         appendli(file.name, file)
                     }
 
@@ -310,8 +322,7 @@
                     }
 
                     for(let file of files){
-                        let md5str = await md5_file(file)
-                        file.md5 = md5str
+                        await md5_file(file)
                         appendli(file.name, file)
                     }
 
@@ -321,11 +332,16 @@
 
                 // 为 body 添加 paste 事件监听器
                 document.body.addEventListener('paste', async function(event) {
-                    // 阻止默认粘贴行为，这样我们可以自定义处理
-                    event.preventDefault();
-
                     // 获取剪贴板数据
                     var clipboardData = event.clipboardData || window.clipboardData;
+
+                    if(!clipboardData.types.includes("text/plain")){
+                        // 阻止默认粘贴行为，这样我们可以自定义处理
+                        event.preventDefault();
+                    }else{
+                        console.log(event.target)
+                        // debugger
+                    }
 
                     // 检查是否有文件被粘贴
                     if (clipboardData && clipboardData.items) {
@@ -333,12 +349,11 @@
                             if (item.kind === 'file') {
                                 // 处理粘贴的文件
                                 var file = item.getAsFile();
-                                console.log(file)
+                                // console.log(file)
                                 // blob 是粘贴的文件，你可以在这里进行进一步的处理，比如读取文件内容或上传文件
                                 // console.log(item,'粘贴了文件:', file);
                                 md5_file(file)
-                                // file.md5 = md5str
-                                // console.log(file)
+                                console.log(file)
                                 appendli(file.name, file)
                             }
                         }
@@ -358,24 +373,32 @@
             let successlog = []
             let csv_data_arr = []
 
+            let custom = document.getElementById('yanzheng').value.trim()
             let regx = {
                 hanzi:'[\\u4e00-\\u9fff]+',
                 shuzi:'\\d',
                 fuhao:'[~!@#$%^&*()_\\+-=`]',
                 zimu:'[a-zA-Z]',
-                whitespace:'\\s'
+                whitespace:'\\s',
+                custom
             }
 
             // document.querySelectorAll('.options input')
-            let delMap = {}
+            let delMap = {custom: true}
 
             Array.from(document.querySelectorAll('.options input')).map((item,id)=>{
                 delMap = {[item.getAttribute('id')]: item.checked, ...delMap}
                 // return item.checked?1:0
             })
-            let orgname = document.getElementById('orgname').value
-            orgname = `${orgname.trim()}`
 
+            debugger
+
+            let prefix_word = document.getElementById('prefix_word').value,
+                suffix_word = document.getElementById('suffix_word').value,
+                orgname = document.getElementById('orgname').value
+            prefix_word = `${prefix_word.trim()}`
+            suffix_word = `${suffix_word.trim()}`
+            orgname = `${orgname.trim()}`
 
             // 获取所有的<li>元素
             var listItems = document.querySelectorAll('ul#ulclass li');
@@ -389,21 +412,23 @@
                 // 文件名可能被处理成空,谨慎使用
                 fileinfo = sanitize_filename(file.name, delMap, regx)
 
-                debugger
-                let newName = `${fileinfo.name}YX${ts}`
+                let newName = `${prefix_word}${fileinfo.name}${suffix_word}YX${ts}`
+                newName = `${newName}${SparkMD5.hash(newName)}`.slice(0,32)
+                let userName = `${fileinfo.name}YX${ts}`
 
+                /* 成功则加入成功文件夹 */
                 if(blob.size < 200*1024 && blob.size >10*1024 && fileinfo.name != ''){
                     successfolder.file(`${newName}.${fileinfo.ext}`, blob, {binaray: true})
-                    csv_data_arr.push(`YX${fileinfo.name},${orgname},,,, ${newName},,,,`)
+                    csv_data_arr.push(`${userName},${orgname},,,, ${newName},,,,`)
 
                     successlog.push(`${originalname}\t\t成功\t\t${newName}.${fileinfo.ext}`)
-                }else{
-                    debugger
+                }
+                else /* 失败则加入文件夹 */
+                {
                     failedfolder.file(`${newName}.${fileinfo.ext}`, blob, {binaray: true})
 
                     errlog.push(`${originalname}\t\t失败\t\t处理后仍<10k或>200K,或文件名不规范`)
                 }
-                // console.log(listItem.textContent);
             }
 
             if(listItems.length<=0){
@@ -418,9 +443,15 @@
                 zip.file(`${orgname}照片清单${ts}.csv`, convertCSV(csv_data_arr, ts))
             }
 
-            zip.file('log.txt', `成功 ${listItems.length-errlog.length} 个,失败 ${errlog.length} 个,共计 ${listItems.length} 个\n\n${successlog.join('\n')}\n${errlog.join('\n')}`)
+            zip.file(`${listItems.length}-S${listItems.length-errlog.length}-F${errlog.length}-log.txt`,
+                `文件名解读: "第一个数字"表示共处理的多少个文件,"S数字"表示成功处理了多少个文件,"F数字"表示失败了多少个文件\n` +
+                `成功 ${listItems.length-errlog.length} 个,失败 ${errlog.length} 个,共计 ${listItems.length} 个\n\n${successlog.join('\n')}\n${errlog.join('\n')}`)
+            // 生成压缩文件
             zip.generateAsync({ type: 'blob' }).then(content=>{
-                saveAs(content, `${orgname}${ts}.zip`)
+                // 这里的content是一个Blob对象，表示压缩后的文件
+                // 你可以使用URL.createObjectURL(content)来获取文件的临时URL
+                // 或者使用saveAs(content)来下载这个文件
+                saveAs(content, `${ts}-${orgname}-${listItems.length}-S${listItems.length-errlog.length}-F${errlog.length}.zip`) // 使用file-saver库来保存文件
             })
 
 /*
@@ -449,6 +480,8 @@
         }
 
         const btnClickEvent2 = async function (e){
+
+            // return
             let zip = new JSZip()
             let t = new Date().getTime(),
             ts = parseInt(t/1000),
@@ -469,7 +502,6 @@
                 }
             }
 
-            debugger
             if(listItems.length<=0){
                 let imageUploads = document.getElementsByClassName('imageUpload')
                 let imageUpload = imageUploads[0]
@@ -489,7 +521,7 @@
 
             let el = e.target
             if(el.tagName.toLowerCase() !== 'li'){
-                el = el.parentNode.parentNode
+                el = el.parentNode.parentNode.parentNode
             }
             el.remove()
         }
@@ -500,7 +532,7 @@
 
             for(let ul of uls){
                 let blob = file2blob(file)
-                if(file.size<=10*1024 || file.size>=200*1024 || !/\.jpg$/.test(file.name)){
+                if(file.not_jpg || file.size<=10*1024 || file.size>=200*1024 || !/\.jpg$/.test(file.name)){
                     let newDataURL = await compressImage(file)
                     // 创建一个 Blob 对象
                     blob = dataURL2blob(newDataURL);
@@ -509,9 +541,18 @@
                 let li = document.createElement('li')
                 let span1 = document.createElement('span')
                 let span2 = document.createElement('span')
+
                 let cancelBtn = document.createElement('div')
-                let wrapDiv = document.createElement('div')
-                // wrapDiv.append(li)
+                let inputDiv = document.createElement('div')
+                let outputDiv = document.createElement('div')
+                let middleDiv = document.createElement('div')
+                inputDiv.className = 'input'
+                outputDiv.className = 'outputDiv'
+                middleDiv.className = 'middleDiv'
+
+                middleDiv.innerText = '=>'
+                inputDiv.append(span1)
+                outputDiv.append(span2)
 
                 let oldsize = parseInt(file.size/1024)
                 let newsize = parseInt(blob.size/1024)
@@ -524,19 +565,97 @@
                 cancelBtn.className = 'fdecs'
                 cancelBtn.addEventListener('click', removeEle)
 
-                span1.innerText = text
-                span2.innerText = `${oldsize>=1024?parseInt(oldsize/1024):oldsize}${oldsize>=1024?'Mb':'Kb'} => ${parseInt(blob.size/1024)}Kb`
-
+                span1.innerText = `${text}` + `(${oldsize>=1024?parseInt(oldsize/1024):oldsize}${oldsize>=1024?'Mb':'Kb'})`
+                span2.innerText = `${text}` + `(${parseInt(blob.size/1024)}Kb)`
 
                 // li.innerText = `${text}  ${oldsize>=1024?parseInt(oldsize/1024):oldsize}${oldsize>=1024?'Mb':'Kb'} => ${parseInt(blob.size/1024)}Kb`
 
                 li['file'] = file
                 li['blob'] = blob
+                li['not_jpg'] = file.not_jpg
+
                 file['target'] = li
-                li.append(span1)
-                li.append(span2)
+                li.append(inputDiv)
+                li.append(middleDiv)
+                li.append(outputDiv)
                 span2.append(cancelBtn)
                 ul.append(li)
                 // <li><span>retouch_2024040514530511.png</span><span> 5Mb => 61kb</span></li>
             }
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// function checkIfJPG(file) {
+//     return new Promise((resolve, reject) => {
+//         const reader = new FileReader();
+
+//         reader.onload = function(e) {
+//             const buffer = new Uint8Array(e.target.result);
+
+//             // JPG 文件通常以 0xFF, 0xD8 开始
+//             if (buffer[0] === 0xFF && buffer[1] === 0xD8) {
+//                 resolve(true);
+//             } else {
+//                 resolve(false);
+//             }
+//         };
+
+//         reader.onerror = function(e) {
+//             reject(e.error);
+//         };
+
+//         // 读取文件的前 2 字节（足以判断是否是 JPG）
+//         const blobSlice = file.slice(0, 2);
+//         reader.readAsArrayBuffer(blobSlice);
+//     });
+// }
+
+// // 使用示例
+// document.querySelector('input[type="file"]').addEventListener('change', async (e) => {
+//     const file = e.target.files[0];
+//     const isJPG = await checkIfJPG(file);
+//     console.log(isJPG ? '是 JPG 文件' : '不是 JPG 文件');
+// });
