@@ -659,3 +659,5 @@
 //     const isJPG = await checkIfJPG(file);
 //     console.log(isJPG ? '是 JPG 文件' : '不是 JPG 文件');
 // });
+
+
