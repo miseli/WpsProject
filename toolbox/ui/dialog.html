@@ -11,6 +11,15 @@
 	<meta charset="utf-8">
 	<link rel="stylesheet" href="../js/lib/codemirror.bundle.css" type="text/css" media="all">
 	<style>
+html {
+  overflow: auto;
+}
+body {
+  overflow: hidden; /* 隐藏滚动条 */
+  height: 100%; /* 设置body高度 */
+  width: 100%; /* 设置body宽度 */
+  /*position: fixed; /* 固定body位置 */*/
+}
 		.cm-activeLine.cm-line, .cm-activeLineGutter{
 			background-color: rgb(143 218 255 / 27%) !important;
 		}
@@ -46,6 +55,7 @@
 					<button data-action="接龙统计" title="自动删除无特殊作业后统计"></button>
 					<button data-action="作业统计" title="统计所有作业"></button>
 					<button data-action="早会统计" title="统计电气焊动火作业受限作业"></button>
+					<button data-action="填加日期" title="自动在E列增加日期前缀"></button>
 					<!-- <button data-action="卡具统计" title="统计卡具台账"></button> -->
 					<!-- <button data-action="统计日期" title="根据作业日期统计所有作业日期"></button> -->
 					<br />

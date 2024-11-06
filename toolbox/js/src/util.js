@@ -1,6 +1,17 @@
 let vip = 0, editor = ''
 // vip = 1
-
+const COLORS = {
+  Red: 0X0000FF, //红色
+  Green: 0X00FF00, //绿色
+  Blue_deep: 0XFF0000, //深蓝色
+  Blue_light: 0XFFFF00, //浅蓝色
+  Pink: 0XFF00FF, //粉色
+  Yellow_light: 0X00FFFF, //黄色
+  Yellow_deep: 0X8FBFFF, //土黄色
+  White: 0XFFFFFF, //白色
+  Lavender: 0xC7A0B1, //淡紫色
+}
+// 背景填充(COLORS.Red, Application.ActiveCell)
 
 // axios.post('http://127.0.0.1:8010/tp6/public/Index/excelwordmiddle',{url:param})
 // $$('tr.item>td:nth-child(3)').each((id, item)=>{
@@ -15,8 +26,6 @@ let vip = 0, editor = ''
 //         $$(item).parent().hide()
 //     }
 // })
-
-
 
 // let nbtn = $$(`<button>一键确认</button>`)
 // $$('body').append(nbtn)
@@ -37,9 +46,6 @@ let vip = 0, editor = ''
 //     console.log('有请求失败了:', errors);
 //   });
 // })
-
-
-
 
 
 
@@ -302,6 +308,54 @@ function 获取有效表位置(curSheet){
   }
 }
 
+/**
+ * 生成随机日期
+ * 不传递任何参数则返回当前月的随机日期
+ * 传递year,month参数,则返回指定年月中的随机日期
+ */
+function getRandomDate(year, month, day = 6) {
+
+    let today = new Date()
+
+    if(year == undefined){
+      month = today.getMonth()
+      year = today.getFullYear()
+    }else{
+      month -= 1
+    }
+
+    // 创建一个表示月份第一天的Date对象
+    let date = new Date(year, month, 1);
+
+    // 获取该月份的天数
+    // 注意getMonth()返回的是0-11的月份
+    let daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    //计算生成去掉day天的当月天数
+    daysInMonth -= daysInMonth>day?day:0
+
+    // 1至daysInMonth范围内生成一个随机天数
+    let randomDay = Math.floor(Math.random() * daysInMonth) + 1;
+
+    // 设置date对象为月份内的随机一天
+    date.setDate(randomDay);
+
+    // 格式化日期为YYYY-MM-DD
+    // let formattedDate = date.getFullYear() + '-' + ('0' + (date.getMonth() + 1)).slice(-2) + '-' + ('0' + date.getDate()).slice(-2);
+    let formattedDate = (date.getMonth() + 1) + '月' + ('0' + date.getDate()).slice(-2) + '日';
+    return formattedDate;
+}
+
+function 填加日期() {
+  for(let i = 3; i<45; i++){
+    let tmp = Application.Range("B" + i).Value2
+    if(tmp == null || tmp.trim() == ""){
+      break;
+    }
+    Application.Range("E" + i).Value2 = getRandomDate(2024,9) + tmp
+  }
+}
+
 function 合并居中单元格(obj, txt) {
   obj.UnMerge();
   obj.Merge(false);
@@ -394,9 +448,6 @@ function 打印设置() {
 }
 
 function 背景填充(color, target = Application.Selection) {
-  // 蓝:0xff0000
-  // 绿:0x00ff00
-  // 红:0x0000ff
   (obj => {
     if (color == undefined) {
       Application.Selection.Interior.Pattern = WPS_Enum.xlPatternNone;
@@ -677,7 +728,7 @@ function 重点检维修分享() {
 
     if (/(特级|受限)/.test(tmp)) {
       //涂黄
-      背景填充(0x00ffff, tbl.Rows.Item(i))
+      背景填充(COLORS.Yellow_light, tbl.Rows.Item(i))
     }
     if (!/(动火|受限)/.test(tmp)) {
       // curSheet.Rows.Item(i).Delete()
@@ -762,7 +813,7 @@ function 检维修日表() {
     // }
 
     if (/(动火|受限|高处四级)/g.test(tmp)) {
-      背景填充(0x00ffff, curSheet.Rows.Item(i))
+      背景填充(COLORS.Yellow_light, curSheet.Rows.Item(i))
     }
 
     if (/(特级|受限)/g.test(tmp)) {
@@ -925,9 +976,9 @@ function 早会统计() {
         level = obj.Item("J".distance(col)).Text.replace(/[\r\n\t,，]/g, ',').replace('高处特级', '高处四级')
       levels.push(level)
       if (/(受限|动火)/.test(level)){
-        if (/(焊|堵|漏)/.test(content)) {
-          //明火土黄色
-          背景填充(0x8FBFFA, tbl.Rows.Item(i))
+        if (/(磨|焊|割)/.test(content)) {
+          //明火土黄色FFBF8F
+          背景填充(COLORS.Yellow_deep, tbl.Rows.Item(i))
           id1++
         }
       }
@@ -1102,21 +1153,34 @@ function 离线风险研判() {
   let checkfun = (obj)=>{
     let {person,jiezhi,jibie,start_t,end_t, tbl, i, fuzeren, chejian, content} = obj
     let columns = curSheet.Rows.Item(i).Columns
+    let personNums = person.match(/\d+/)
+    personNums = personNums===null?0:personNums[0]
 
     //标记错误行为红色
     if(
       person.length<4 ||
       (
+        // 是否应该录像
         (((/高处[特三四]级/.test(jibie)) || (/(动土|断路)/.test(jibie)) || ((/吊装[一二三]级/.test(jibie)) && (!/10吨/.test(jibie))) || (/(特级)/.test(jibie)) || (/受限/.test(jibie))) && (!/是/.test(person))) ||
+
         /[火受]/.test(jibie) &&
         (
-          ((!/空气|水|无|蒸汽/.test(jiezhi)) && (!/特级/.test(jibie)) && (!/非明火/.test(person)) && (/(炉|H-\d\d\d\d)/.test(content)) && (/火/.test(jibie))) ||
-          // (/火/.test(jibie) && !/工具/.test(content)) ||
-          // !/(是|否)/.test(person) ||
-           (/火/.test(jibie) && !/(明火)/.test(person)) ||
+          //裂解炉可燃介质的明火作业必须是特级
+          // ((!/空气|水|无|蒸汽/.test(jiezhi)) && (!/特级/.test(jibie)) && (!/非明火/.test(person)) && (/(炉|H-\d\d\d\d)/.test(content)) && (/火/.test(jibie))) ||
+
+          //裂解炉必须特级动火
+          (/^乙烯车间/.test(chejian) && /炉/.test(content) && !/特级/.test(jibie))||
+
+          (/火/.test(jibie) && !/(明火)/.test(person)) ||
+          (/火/.test(jibie) && /(明火)/.test(person)) ||
+
+          //不允许填无介质
           /无/.test(jiezhi) ||
-          // /[\r\n]/.test(person) ||
-          !/作\s*业\s*\d+\s*人\s*/.test(person) ||
+
+          //是否填人数了
+          !/作\s*业\s*\d+\s*人\s*/.test(person) || !/作\s*业\s*\s*人\s*数\s*\d+/.test(person)
+
+          //作业时间范围
           (
             new Date(end_t).getHours()>=18 ||
             new Date(start_t).getHours()<8 ||
@@ -1128,79 +1192,99 @@ function 离线风险研判() {
         )
       )
     ){
-      // 背景填充(0x0000ff, tbl.Rows.Item(i)) //涂红
-
       if(person.length<4){
-        背景填充(0xffff00, columns.Item('N'.distance(col)))
+        背景填充(COLORS.Red, columns.Item('N'.distance(col)))
         // logmsg.push(`N${i}：备注栏信息不全`)
         logmsg.push(`<i data-pos="${'N'.distance(col)}${i}">${'N'.distance(col)}${i}：${chejian} 备注栏信息不全</i>`)
       }
 
       // 检查哪些作业必须录像
-      if (((/高处[特三四]级/.test(jibie)) || (/(动土|断路)/.test(jibie)) || ((/吊装[一二三]级/.test(jibie)) && (!/10吨/.test(jibie))) || (/(特级)/.test(jibie)) || (/受限/.test(jibie))) && (!/是/.test(person))) {
-        背景填充(0x00ff00, columns.Item('N'.distance(col)))
+      // if (((/高处[特三四]级/.test(jibie)) || (/(动土|断路)/.test(jibie)) || ((/吊装[一二三]级/.test(jibie)) && (!/10吨/.test(jibie))) || (/(特级)/.test(jibie)) || (/受限/.test(jibie))) && (!/是/.test(person))) {
+      if (((/(特级)/.test(jibie)) || (/受限/.test(jibie))) && (!/是/.test(person))) {
+        背景填充(COLORS.Red, columns.Item('N'.distance(col)))
         // logmsg.push(`N${i}：备注栏信息不全`)
-        logmsg.push(`<i data-pos="${'N'.distance(col)}${i}">${'N'.distance(col)}${i}：${chejian} <b>必须录像</b></i>`)
+        logmsg.push(`<i data-pos="${'N'.distance(col)}${i}">${'N'.distance(col)}${i}：${chejian} <b data-pos="${'N'.distance(col)}${i}" style="color:red">必须录像</b></i>`)
       }
 
       // 裂解炉可燃介质工艺管线的动火应是特级
-      if ((!/空气|水|无|蒸汽/.test(jiezhi)) && (!/特级/.test(jibie)) && (!/非明火/.test(person)) && (/(炉|H-\d\d\d\d)/.test(content)) && (/火/.test(jibie))) {
-        背景填充(0x0000ff, columns.Item('J'.distance(col)))
-        logmsg.push(`<i data-pos="${'J'.distance(col)}${i}">${'J'.distance(col)}${i}： <b>炉区工艺管线</b>应是特级动火</i>`)
+      // if ((!/空气|水|无|蒸汽/.test(jiezhi)) && (!/特级/.test(jibie)) && (!/非明火/.test(person)) && (/(炉|H-\d\d\d\d)/.test(content)) && (/火/.test(jibie))) {
+      //   背景填充(COLORS.Red, columns.Item('J'.distance(col)))
+      //   logmsg.push(`<i data-pos="${'J'.distance(col)}${i}">${'J'.distance(col)}${i}： <b>炉区工艺管线</b>应是特级动火</i>`)
+      // }
+
+      // 乙烯裂解炉必须是特级动火
+      if(/^乙烯车间/.test(chejian) && /炉/.test(content) && !/特级/.test(jibie)){
+        背景填充(COLORS.Red, columns.Item('J'.distance(col)))
+        logmsg.push(`<i data-pos="${'J'.distance(col)}${i}">${'J'.distance(col)}${i}：<b data-pos="${'J'.distance(col)}${i}" style="color:red">裂解炉特级</b></i>`)
       }
 
       // if(/火/.test(jibie) && !/工具/.test(content)){
-      //   背景填充(0x00ff00, columns.Item('F'.distance(col)))
+      //   背景填充(COLORS.Green, columns.Item('F'.distance(col)))
       //   logmsg.push(`<i data-pos="${'F'.distance(col)}${i}">${'F'.distance(col)}${i}：${content} 作业内容没标明<b>工具</b></i>`)
       // }
 
       // if(!/(是|否)/.test(person.replace(/[\r\n]*$/g,''))){
-      //   背景填充(0x00ff00, columns.Item('N'.distance(col)))
+      //   背景填充(COLORS.Green, columns.Item('N'.distance(col)))
       //   // logmsg.push(`N${i}：没有备注是否录像`)
       //   logmsg.push(`<i data-pos="${'N'.distance(col)}${i}">${'N'.distance(col)}${i}：${chejian} 没有备注是否<b>录像</b></i>`)
       // }
 
-      if (/火/.test(jibie) && !/(明火)/.test(person)) {
-        背景填充(0x00ff00, columns.Item('N'.distance(col)))
-        // logmsg.push(`N${i}：没有备注是否录像`)
-        logmsg.push(`<i data-pos="${'N'.distance(col)}${i}">${'N'.distance(col)}${i}：${chejian} 没有备注是否<b>明火</b></i>`)
+      if (/火/.test(jibie)){
+        // 检查是否备注明火非明火
+        if (!/(明火)/.test(person)) {
+          背景填充(COLORS.Red, columns.Item('N'.distance(col)))
+          logmsg.push(`<i data-pos="${'N'.distance(col)}${i}">${'N'.distance(col)}${i}：${chejian} 未备注<b>是否明火</b></i>`)
+        } else {
+          // 如果备注了,判断备注的明火/非明火是否正确
+          if (/非明火/.test(person)){
+            if(/(磨|焊|割)/.test(content)){
+              背景填充(COLORS.Red, columns.Item('N'.distance(col)))
+              logmsg.push(`<i data-pos="${'N'.distance(col)}${i}">${'N'.distance(col)}${i}：${chejian} <b>应该是明火</b></i>`)
+            }
+          }else{
+            if(!/(磨|焊|割)/.test(content)){
+              背景填充(COLORS.Red, columns.Item('N'.distance(col)))
+              logmsg.push(`<i data-pos="${'N'.distance(col)}${i}">${'N'.distance(col)}${i}：${chejian} <b data-pos="${'N'.distance(col)}${i}" style="color:red">应该是fei明火</b></i>`)
+            }
+          }
+        }
       }
 
-      //标记具体哪个单元格错误
+      // 介质不允许填无
       if((/无/.test(jiezhi) && /火/.test(jibie))){
-        背景填充(0x00ff00, columns.Item('G'.distance(col)))
+        背景填充(COLORS.Green, columns.Item('G'.distance(col)))
         logmsg.push(`<i data-pos="G${i}">G${i}：${chejian} <b>介质</b>不允许填无</i>`)
         logmsg.push(`<i data-pos="${'G'.distance(col)}${i}">${'G'.distance(col)}${i}：${chejian} <b>介质</b>不允许填无</i>`)
       }
 
       // if(/[\r\n]/.test(person.replace(/[\r\n]*$/g,''))){
-      //   背景填充(0x00ff00, columns.Item('N'.distance(col)))
+      //   背景填充(COLORS.Green, columns.Item('N'.distance(col)))
       //   logmsg.push(`<i data-pos="${'N'.distance(col)}${i}">${'N'.distance(col)}${i}：${chejian} 备注栏中有换行</i>`)
       // }
 
-      if(!/作\s*业\s*\d+\s*人\s*/.test(person)){
-        背景填充(0x00ff00, columns.Item('N'.distance(col)))
+      if(!/作\s*业\s*\d+\s*人\s*/.test(person) && !/作\s*业\s*\s*人\s*数\s*\d+/.test(person)){
+        背景填充(COLORS.Green, columns.Item('N'.distance(col)))
         // logmsg.push(`N${i}：作业N人后无冒号或未填写人数`)
         logmsg.push(`<i data-pos="${'N'.distance(col)}${i}">${'N'.distance(col)}${i}：${chejian} 作业N人后无冒号或未填写人数</i>`)
       }
 
       if(new Date(end_t).getHours()>=18){
-        背景填充(0x00ff00, columns.Item('L'.distance(col)))
+        背景填充(COLORS.Green, columns.Item('L'.distance(col)))
         // logmsg.push(`L${i}：时间超限`)
         logmsg.push(`<i data-pos="${'L'.distance(col)}${i}">${'L'.distance(col)}${i}：时间超限</i>`)
       }
       if(new Date(start_t).getHours()<8){
-        背景填充(0x00ff00, columns.Item('K'.distance(col)))
+        背景填充(COLORS.Green, columns.Item('K'.distance(col)))
         // logmsg.push(`K${i}：时间超限`)
         logmsg.push(`<i data-pos="${'K'.distance(col)}${i}">${'K'.distance(col)}${i}：时间超限</i>`)
       }
       if(new Date(end_t).getDate() != new Date(start_t).getDate()){
-        背景填充(0x00ff00, columns.Item('K'.distance(col) + ':' + 'L'.distance(col)))
+        背景填充(COLORS.Green, columns.Item('K'.distance(col) + ':' + 'L'.distance(col)))
         // logmsg.push(`K${i}L${i}：日期不合规`)
         logmsg.push(`<i data-pos="${'K'.distance(col)}${i}:${'L'.distance(col)}${i}">${'K'.distance(col)}${i}${'L'.distance(col)}${i}：日期不合规</i>`)
       }
       if(new Date(end_t).getTime()<= new Date(start_t).getTime()){
-        背景填充(0x00ff00, columns.Item('K'.distance(col) + ':' + 'L'.distance(col)))
+        背景填充(COLORS.Green, columns.Item('K'.distance(col) + ':' + 'L'.distance(col)))
         // logmsg.push(`K${i}L${i}：开始时间晚于结束时间`)
         logmsg.push(`<i data-pos="${'K'.distance(col)}${i}:${'L'.distance(col)}${i}">${'K'.distance(col)}${i}${'L'.distance(col)}${i}：开始时间晚于结束时间</i>`)
       }
@@ -1225,8 +1309,14 @@ function 离线风险研判() {
     if(/[火受]/.test(jibie)){
       if(fuzeren.replace(/\s/g,'')!=chejianfuzeren[chejian]){
       // if(!new RegExp(fuzeren,'g').test(chejianfuzeren[chejian])){
-        背景填充(0x0000ff, columns.Item('M'.distance(col)))
-        logmsg.push(`<i data-pos="${'M'.distance(col)}${i}">${'M'.distance(col)}${i}：负责人应该是<b data-pos="${'M'.distance(col)}${i}" style="color:red" >${chejianfuzeren[chejian]}</b></i>`)
+        背景填充(COLORS.Green, columns.Item('M'.distance(col)))
+        logmsg.push(`<i data-pos="${'M'.distance(col)}${i}">${'M'.distance(col)}${i}：负责人应该是<b data-pos="${'M'.distance(col)}${i}" style="color:green" >${chejianfuzeren[chejian]}</b></i>`)
+      }
+
+      //动火受限人数不能超过6
+      if(personNums>6){
+        背景填充(COLORS.Red, columns.Item('N'.distance(col)))
+        logmsg.push(`<i data-pos="${'N'.distance(col)}${i}">${'N'.distance(col)}${i}：<b>人数</b>不能超过<b data-pos="${'N'.distance(col)}${i}" style="color:red" >6</b>个</i>`)
       }
     }
   }
@@ -1282,18 +1372,24 @@ function 离线风险研判() {
   let riqi = new Date(curSheet.Rows.Item(row+1).Columns.Item("K".distance(col)).Text).format('yyyy-MM-dd') + '至' + new Date(curSheet.Rows.Item(row+1).Columns.Item("L".distance(col)).Text).format('yyyy-MM-dd')
 
   heji = 0
+  heji = levels.length
 
   levels = levels.map((item) => {
     return item.replace(/\(.*\)/g, '')
   }).join(',')
 
   let a = {
+    '动火': 0,
     '动火特级': 0,
     '动火一级': 0,
     '动火二级': 0,
     '受限': 0,
     '盲板': 0,
     '高处': 0,
+    '高处一级': 0,
+    '高处二级': 0,
+    '高处三级': 0,
+    '高处特级': 0,
     '吊装': 0,
     '临时用电': 0,
     '动土': 0,
@@ -1309,7 +1405,7 @@ function 离线风险研判() {
   }
   Object.keys(a).forEach((item) => {
     a[item] = convert(item)
-    heji += a[item]
+    // heji += a[item]
   })
 
   let starttime = new Date(curSheet.Rows.Item(row+1).Columns.Item("K".distance(col)).Text)
@@ -1368,6 +1464,80 @@ function 离线风险研判() {
             <td class="tag" style="border-left: solid red 2px;">${a['动土']}</td>
             <td>${a['断路']}</td>
             <td>${a['无特殊']}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table style="text-align: center; width: 100%; margin-top: 20px" border="1">
+        <thead>
+          <tr class="header">
+            <th colspan=3>作业数量</th>
+            <th>${heji}</th>
+          </tr>
+
+          <tr class="header">
+            <th>作业类别</th>
+            <th>作业级别</th>
+            <th>作业数量</th>
+            <th>合计</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan=4>高处作业</td>
+            <td>高处一级</td>
+            <td>${a['高处一级']}</td>
+            <td rowspan=4>${a['高处']}</td>
+          </tr>
+          <tr>
+            <td>高处二级</td>
+            <td>${a['高处二级']}</td>
+          </tr>
+          <tr>
+            <td>高处三级</td>
+            <td>${a['高处三级']}</td>
+          </tr>
+          <tr>
+            <td>高处四级</td>
+            <td>${a['高处特级']}</td>
+          </tr>
+          <tr>
+            <td rowspan=3>动火作业</td>
+            <td>动火一级</td>
+            <td>${a['动火一级']}</td>
+            <td rowspan=3>${a['动火']}</td>
+          </tr>
+          <tr>
+            <td>动火二级</td>
+            <td>${a['动火二级']}</td>
+          </tr>
+          <tr>
+            <td>动火特级</td>
+            <td>${a['动火特级']}</td>
+          </tr>
+          <tr>
+            <td colspan=2>吊装</td>
+            <td colspan=2>${a['吊装']}</td>
+          </tr>
+          <tr>
+            <td colspan=2>临时用电</td>
+            <td colspan=2>${a['临时用电']}</td>
+          </tr>
+          <tr>
+            <td colspan=2>断路</td>
+            <td colspan=2>${a['断路']}</td>
+          </tr>
+          <tr>
+            <td colspan=2>动土</td>
+            <td colspan=2>${a['动土']}</td>
+          </tr>
+          <tr>
+            <td colspan=2>盲板</td>
+            <td colspan=2>${a['盲板']}</td>
+          </tr>
+          <tr>
+            <td colspan=2>检维修作业</td>
+            <td colspan=2>${a['无特殊']}</td>
           </tr>
         </tbody>
       </table>
@@ -1544,16 +1714,13 @@ function 动火受限(pattern_str = '(动火|受限)') {
     // tbl.Rows.Item(i).Columns.Item("A").Value2 = ""
 
     if (/特级/.test(tmp) && /动火/.test(tmp) && /受限/.test(tmp)){
-      背景填充(0x0000ff, tbl.Rows.Item(i))
+      背景填充(COLORS.Red, tbl.Rows.Item(i))
     } else if(/受限/.test(tmp)) {
       // tbl.Rows.Item(i).Columns.Item("A").Value2 = "**"
-      背景填充(0xC7A0B1, tbl.Rows.Item(i))
-      // 背景填充(0xff0000, tbl.Rows.Item(i)) // 蓝色
-      // 背景填充(0x00ff00, tbl.Rows.Item(i)) //绿色
+      背景填充(COLORS.Lavender, tbl.Rows.Item(i))
     } else if (/特级/.test(tmp)){
       // tbl.Rows.Item(i).Columns.Item("A").Value2 = "**"
-      //涂黄
-      背景填充(0x00ffff, tbl.Rows.Item(i))
+      背景填充(COLORS.Yellow_light, tbl.Rows.Item(i))
     }
 
 
@@ -1610,7 +1777,7 @@ function 备注列格式化(){
     if (/(特级|受限)/.test(tmp)) {
       // tbl.Rows.Item(i).Columns.Item("A").Value2 = "**"
       //涂黄
-      背景填充(0x00ffff, tbl.Rows.Item(i))
+      背景填充(COLORS.Yellow_light, tbl.Rows.Item(i))
     }
 
     if (new RegExp(pattern_str, 'g').test(tmp)) {} else {
