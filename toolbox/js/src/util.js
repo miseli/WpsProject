@@ -302,6 +302,54 @@ function 获取有效表位置(curSheet){
   }
 }
 
+/**
+ * 生成随机日期
+ * 不传递任何参数则返回当前月的随机日期
+ * 传递year,month参数,则返回指定年月中的随机日期
+ */
+function getRandomDate(year, month, day = 6) {
+
+    let today = new Date()
+
+    if(year == undefined){
+      month = today.getMonth()
+      year = today.getFullYear()
+    }else{
+      month -= 1
+    }
+
+    // 创建一个表示月份第一天的Date对象
+    let date = new Date(year, month, 1);
+
+    // 获取该月份的天数
+    // 注意getMonth()返回的是0-11的月份
+    let daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    //计算生成去掉day天的当月天数
+    daysInMonth -= daysInMonth>day?day:0
+
+    // 1至daysInMonth范围内生成一个随机天数
+    let randomDay = Math.floor(Math.random() * daysInMonth) + 1;
+
+    // 设置date对象为月份内的随机一天
+    date.setDate(randomDay);
+
+    // 格式化日期为YYYY-MM-DD
+    // let formattedDate = date.getFullYear() + '-' + ('0' + (date.getMonth() + 1)).slice(-2) + '-' + ('0' + date.getDate()).slice(-2);
+    let formattedDate = (date.getMonth() + 1) + '月' + ('0' + date.getDate()).slice(-2) + '日';
+    return formattedDate;
+}
+
+function 填加日期() {
+  for(let i = 3; i<45; i++){
+    let tmp = Application.Range("B" + i).Value2
+    if(tmp == null || tmp.trim() == ""){
+      break;
+    }
+    Application.Range("E" + i).Value2 = getRandomDate(2024,9) + tmp
+  }
+}
+
 function 合并居中单元格(obj, txt) {
   obj.UnMerge();
   obj.Merge(false);
@@ -1102,6 +1150,8 @@ function 离线风险研判() {
   let checkfun = (obj)=>{
     let {person,jiezhi,jibie,start_t,end_t, tbl, i, fuzeren, chejian, content} = obj
     let columns = curSheet.Rows.Item(i).Columns
+    let personNums = person.match(/\d+/)
+    personNums = personNums===null?0:personNums[0]
 
     //标记错误行为红色
     if(
@@ -1137,7 +1187,8 @@ function 离线风险研判() {
       }
 
       // 检查哪些作业必须录像
-      if (((/高处[特三四]级/.test(jibie)) || (/(动土|断路)/.test(jibie)) || ((/吊装[一二三]级/.test(jibie)) && (!/10吨/.test(jibie))) || (/(特级)/.test(jibie)) || (/受限/.test(jibie))) && (!/是/.test(person))) {
+      // if (((/高处[特三四]级/.test(jibie)) || (/(动土|断路)/.test(jibie)) || ((/吊装[一二三]级/.test(jibie)) && (!/10吨/.test(jibie))) || (/(特级)/.test(jibie)) || (/受限/.test(jibie))) && (!/是/.test(person))) {
+      if (((/(特级)/.test(jibie)) || (/受限/.test(jibie))) && (!/是/.test(person))) {
         背景填充(0x00ff00, columns.Item('N'.distance(col)))
         // logmsg.push(`N${i}：备注栏信息不全`)
         logmsg.push(`<i data-pos="${'N'.distance(col)}${i}">${'N'.distance(col)}${i}：${chejian} <b>必须录像</b></i>`)
@@ -1227,6 +1278,16 @@ function 离线风险研判() {
       // if(!new RegExp(fuzeren,'g').test(chejianfuzeren[chejian])){
         背景填充(0x0000ff, columns.Item('M'.distance(col)))
         logmsg.push(`<i data-pos="${'M'.distance(col)}${i}">${'M'.distance(col)}${i}：负责人应该是<b data-pos="${'M'.distance(col)}${i}" style="color:red" >${chejianfuzeren[chejian]}</b></i>`)
+      }
+
+      if(/^乙烯车间/.test(chejian) && /炉/.test(content) && !/特级/.test(jibie)){
+        背景填充(0x0000ff, columns.Item('J'.distance(col)))
+        logmsg.push(`<i data-pos="${'J'.distance(col)}${i}">${'J'.distance(col)}${i}：<b data-pos="${'J'.distance(col)}${i}" style="color:red" >裂解炉特级</b></i>`)
+      }
+
+      if(personNums>6){
+        背景填充(0x0000ff, columns.Item('N'.distance(col)))
+        logmsg.push(`<i data-pos="${'N'.distance(col)}${i}">${'N'.distance(col)}${i}：<b>人数</b>不能超过<b data-pos="${'N'.distance(col)}${i}" style="color:red" >6</b>个</i>`)
       }
     }
   }
