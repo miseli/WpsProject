@@ -1,4 +1,5 @@
 let vip = 0, editor = ''
+
 // vip = 1
 const COLORS = {
   Red: 0X0000FF, //红色
@@ -11,6 +12,25 @@ const COLORS = {
   White: 0XFFFFFF, //白色
   Lavender: 0xC7A0B1, //淡紫色
 }
+
+/* 定义表头位置常量 */
+const BIAOJI_COL = 'A'
+const ID_COL = 'B'
+const BIANHAO_COL = 'C' //暂时未使用
+const GONGSI_COL = 'D' //暂时未使用
+const MINGHUO_COL = 'E'
+const JIBIE_COL = 'F'
+const WORKNAME_COL = 'G'
+const CHEJIAN_COL = 'H'
+const CONTENT_COL = 'J'
+const JIEZHI_COL = 'K'
+const POS_COL = 'M'
+const START_T_COL = 'N'
+const END_T_COL = 'O'
+const FUZEREN_COL = 'P'
+const PERSON_COL = 'Q'
+const LUXIANG_COL = 'R'
+
 // 背景填充(COLORS.Red, Application.ActiveCell)
 
 // axios.post('http://127.0.0.1:8010/tp6/public/Index/excelwordmiddle',{url:param})
@@ -279,9 +299,10 @@ function shellExecuteByOAAssist(param) {
 /**
  * 以序号单元格为基准,查找有效表格位置
  * 返回序号单元格的row,col
- * 返回当前表curSheet,有范围tbl
+ * 返回当前表curSheet类似绝对的,序号所在的非空表tbl类似相对的
  */
-function 获取有效表位置(curSheet){
+function 获取有效表位置(title = '序号', curSheet = undefined){
+  if(!vip)return;
   try{
     if(curSheet == undefined){
       curSheet = Application.ActiveSheet
@@ -291,7 +312,8 @@ function 获取有效表位置(curSheet){
     // if (!tbl || tbl.Rows.Count<=2){
       for(let i=1; i<10; i++){
         for(let j=1; j<10; j++){
-          if(/序号/.test(curSheet.Columns.Item(i).Rows.Item(j).Value2)){
+
+          if(new RegExp(title).test(curSheet.Columns.Item(i).Rows.Item(j).Value2)){
             // curSheet.Columns.Item(i).Rows.Item(j).Select()
             tbl = curSheet.Cells.Item(j, i).CurrentRegion
             // tbl = Application.Selection.CurrentRegion
@@ -448,6 +470,7 @@ function 打印设置() {
 }
 
 function 背景填充(color, target = Application.Selection) {
+  if(!vip)return;
   (obj => {
     if (color == undefined) {
       Application.Selection.Interior.Pattern = WPS_Enum.xlPatternNone;
@@ -696,6 +719,7 @@ function printformat(res, startTime, endTime, id) {
 }
 
 function 重点检维修分享() {
+  if(!vip)return;
   let {curSheet, tbl, col, row} = 获取有效表位置()
 
   curSheet.Range(`${'D'.distance(col)}${row}`).ColumnWidth = 13.366666793823242
@@ -760,7 +784,149 @@ function 重点检维修分享() {
   // curSheet.Range("H2").Formula = "动火、受限作业票";
 }
 
+function 汇总格式(pattern_str = '(动火|受限)') {
+  if(!vip)return;
+  let {curSheet, tbl, col, row} = 获取有效表位置('审核标记')
+  let tejinum =  0,
+    yijinum = 0,
+    erjinum = 0,
+    shouxiannum = 0,
+    minghuonum = 0,
+    feiminghuonum = 0
+
+  //保留动火受限行
+  for (let i = row+1, j = 1; i <= tbl.Rows.Count;) {
+
+    let tmp = curSheet.Rows.Item(i).Columns.Item(JIBIE_COL.distance(col)).Text
+    let minghuo_state = curSheet.Rows.Item(i).Columns.Item(MINGHUO_COL.distance(col)).Text
+
+    // if (/特级/.test(tmp) && /动火/.test(tmp) && /受限/.test(tmp)){
+    //   背景填充(COLORS.Red, tbl.Rows.Item(i))
+    // } else if(/受限/.test(tmp)) {
+    //   // tbl.Rows.Item(i).Columns.Item("A").Value2 = "**"
+    //   背景填充(COLORS.Lavender, tbl.Rows.Item(i))
+    // } else if (/特级/.test(tmp)){
+    //   // tbl.Rows.Item(i).Columns.Item("A").Value2 = "**"
+    //   背景填充(COLORS.Yellow_light, tbl.Rows.Item(i))
+    // }
+
+    if(/特级/.test(tmp)){
+      tejinum++
+    }
+    if(/一级动火/.test(tmp)){
+      yijinum++
+    }
+    if(/二级动火/.test(tmp)){
+      erjinum++
+    }
+    if(/受限/.test(tmp)){
+      shouxiannum++
+    }
+    if(/动火/.test(tmp)){
+      if(/非明火/.test(minghuo_state)){
+        feiminghuonum++
+      }else{
+        minghuonum++
+      }
+    }
+
+    // 删除动火受限以外的作业
+    if (new RegExp(pattern_str, 'g').test(tmp)) {
+
+      // 级别中删除动火受限以外的文字
+      tmp = tmp.replace(/作业/g,'').split(',').filter((item)=>{
+        return new RegExp(pattern_str, 'g').test(item)
+      }).join(',')
+
+      curSheet.Rows.Item(i).Columns.Item(BIAOJI_COL.distance(col)).Value2 = '乙烯'
+      curSheet.Rows.Item(i).Columns.Item(ID_COL.distance(col)).Value2 = j++
+      curSheet.Rows.Item(i).Columns.Item(BIANHAO_COL.distance(col)).Value2 = tmp
+
+
+    } else {
+      curSheet.Rows.Item(i).Delete()
+      continue
+      //因为删除之后,下面行上移,所以i不用改变
+    }
+    debugger
+    i++
+  }
+
+  curSheet.Range('A2').Value2 = '申报单位'
+  curSheet.Range('B2').Value2 = '序号'
+  curSheet.Range('C2').Value2 = '作业级别'
+  curSheet.Range('D:D,F:F,S:V').Delete()
+
+  try{
+    let tb = $('.cube')
+    if (tb.length <= 0) {
+      tb = $('<div class="cube">')
+      tb.appendTo('body')
+    }
+
+    tb.html(`
+      <table style="text-align: center; width: 100%;" border="1">
+        <tbody>
+          <tr>
+            <td>乙烯合计</td>
+            <td>明火</td>
+            <td>${minghuonum}</td>
+            <td>非明火</td>
+            <td>${feiminghuonum}</td>
+            <td>受限</td>
+            <td>${shouxiannum}</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td rowspan=3>汇总</td>
+            <td colspan=15>2024年×月×日（周×）</td>
+          </tr>
+          <tr>
+            <td colspan=2>特级动火</td>
+            <td colspan=1>${tejinum}</td>
+            <td colspan=1>一级动火</td>
+            <td colspan=1>${yijinum}</td>
+            <td colspan=1>二级动火</td>
+            <td colspan=1>${erjinum}</td>
+            <td colspan=2>受限</td>
+            <td colspan=1>${shouxiannum}</td>
+            <td colspan=1>明火作业</td>
+            <td colspan=2>${minghuonum}</td>
+            <td colspan=1>非明火作业</td>
+            <td colspan=1>${feiminghuonum}</td>
+          </tr>
+          <tr>
+            <td colspan=15>其他单位未上报</td>
+          </tr>
+        </tbody>
+      </table>
+    `)
+  }catch(e){
+    // console.log(e)
+    alert(e)
+  }
+
+  // Application.Cells(tbl.Rows.Count + 1, "C").Rows.AutoFit()
+  curSheet.Columns.Item("A:XFC,XFD:XFD").AutoFit();
+
+  return tbl
+}
+  // curSheet.Columns.Item("D:D").Insert(-4159)
+  // curSheet.Columns.Item("E:E").Insert(-4161)
+  // curSheet.ActiveSheet.Range("C:C,S:S,T:T,U:U,V:V").Delete()
+
+
+
 function 检维修日表() {
+  if(!vip)return;
   let {curSheet, tbl, row, col} = 获取有效表位置()
 
   //居中自动换行
@@ -863,7 +1029,8 @@ function 自动列宽() {
   Application.Selection.Columns.AutoFit();
 }
 
-function 接龙统计() {
+function 旧接龙统计() {
+  if(!vip)return;
   let flag = 0
   let dict = {
     "乙烯车间": 1,
@@ -889,20 +1056,20 @@ function 接龙统计() {
     (obj => {
 
       let id = obj.Item("A").Text.trim(),
-        workshop = obj.Item("D").Text.replace(/[\r\n\t,，]/g, '').replace('车间', ''),
+        chejian = obj.Item("D").Text.replace(/[\r\n\t,，]/g, '').replace('车间', ''),
         workname = obj.Item("C").Text.replace(/[\r\n\t,，]/g, ''),
         content = obj.Item("C").Text.replace(/[\r\n\t,，]/g, ','),
         pos = obj.Item("I").Text.replace(/[\r\n\t,，]/g, ','),
         level = obj.Item("J").Text.replace(/[\r\n\t,，]/g, ',')
-        if(/聚丙/.test(workshop)){
+        if(/聚丙/.test(chejian)){
           delete dict['聚丙烯一车间']
           delete dict['聚丙烯二车间']
         }else{
           delete dict[obj.Item("D").Text.replace(/[\r\n\t,，]/g, '')]
-          workshop = workshop.replace(/[一二]/,'')
+          chejian = chejian.replace(/[一二]/,'')
         }
-      // workshop = workshop.replace('聚丙烯一','聚丙烯').replace('聚丙烯二','聚丙烯')
-      let tmp = `${level.replace(/[^火受盲高吊临土断无]/g, '')}-` + workshop + workname
+      // chejian = chejian.replace('聚丙烯一','聚丙烯').replace('聚丙烯二','聚丙烯')
+      let tmp = `${level.replace(/[^火受盲高吊临土断无]/g, '')}-` + chejian + workname
 			tmp = tmp.replace(/[ *]/g,'')
 
       if(!flag){
@@ -955,7 +1122,100 @@ function 接龙统计() {
   return tbl;
 }
 
-function 早会统计() {
+function 接龙统计() {
+  if(!vip)return;
+  let flag = 0
+  let dict = {
+    "乙烯车间": 1,
+    "聚乙烯一车间": 2,
+    "聚丙烯一车间": 3,
+    "聚丙烯二车间": 3,
+    "苯乙烯一车间": 4,
+    "加氢抽提联合车间": 5,
+    "聚苯乙烯车间": 6,
+    "水汽车间": 7,
+    "储运车间": 8,
+    "仪表车间": 9,
+    "电气车间": 10,
+    "成品车间": 11
+  }
+
+  let {curSheet, tbl, row, col} = 获取有效表位置('审核标记')
+
+  let line = tbl.Rows.Count
+  let s = '';
+  for (let i = row + 1; i <= tbl.Rows.Count; i++) {
+
+    (obj => {
+      let id = obj.Item(ID_COL).Text.trim(),
+        chejian = obj.Item(CHEJIAN_COL).Text.replace(/[\r\n\t,，]/g, '').replace('车间', ''),
+        workname = obj.Item(WORKNAME_COL).Text.replace(/[\r\n\t,，]/g, ''),
+        content = obj.Item(CONTENT_COL).Text.replace(/[\r\n\t,，]/g, ','),
+        pos = obj.Item(POS_COL).Text.replace(/[\r\n\t,，]/g, ','),
+        level = obj.Item(JIBIE_COL).Text.replace(/[\r\n\t,，]/g, ',')
+        if(/聚丙/.test(chejian)){
+          delete dict['聚丙烯一车间']
+          delete dict['聚丙烯二车间']
+        }else{
+          delete dict[obj.Item(CHEJIAN_COL).Text.replace(/[\r\n\t,，]/g, '')]
+          chejian = chejian.replace(/[一二]/,'')
+        }
+      // chejian = chejian.replace('聚丙烯一','聚丙烯').replace('聚丙烯二','聚丙烯')
+      let tmp = `${level.replace(/[^火受盲高吊临土断无检]/g, '')}-` + chejian + workname
+      tmp = tmp.replace(/[ *]/g,'')
+
+      if(!flag){
+        s += tmp + '\r\n'
+      }else{
+        s += id + (tmp.length > 20 ? `*${tmp.length - 20}` : '') + '\t\t' + tmp + '\r\n'
+      }
+
+    })(tbl.Rows.Item(i).Columns)
+  }
+
+  let outname = new Date(tbl.Rows.Item(line).Columns.Item(END_T_COL).Text).format('yyyy-MM-dd').replace(/-/g, '')
+  let ts = new Date(tbl.Rows.Item(line).Columns.Item(END_T_COL).Text).format('yyyy-MM-dd')
+  ts = new Date(ts).getTime()/1000
+  let excel_url = `http://localhost:8010/tp6/public/excel/get?n[]=${Object.values(dict).join('&n[]=')}&outname=${outname}&ts=${ts}`
+  let excel_image_url = `http://localhost:8010/tp6/public/Excel/getimage?n[]=${Object.values(dict).join('&n[]=')}&outname=${outname}&ts=${ts}`
+
+  if(Object.values(dict).length==0){
+    excel_url = `http://localhost:8010/tp6/public/excel/get?outname=${outname}&ts=${ts}`
+    excel_image_url = `http://localhost:8010/tp6/public/Excel/getimage?outname=${outname}&ts=${ts}`
+  }
+
+  try{
+    $('#word_url').text('导出签到表')
+    $('#word_url')[0].dataset.url = excel_url
+    $('#signexport').text('生成签到表')
+    $('#signexport')[0].dataset.url = excel_image_url
+    document.getElementById("text_p1").innerText = excel_url + '\r\n' + excel_image_url
+    // document.getElementById("text_p2").innerText = excel_image_url
+
+    if(vip){
+      if(editor==''){
+            editor = CodeMirror({
+              parent: document.getElementById("text_p1"),
+              doc: s,
+              // doc: Object.keys(dict).join(',') + '\r\n' + excel_url + '\r\n' + s,
+              // BlankLineNums: 2,
+            })
+      }else{
+        editor.dispatch({changes: {from: 0, to: editor.state.doc.length, insert: s}})
+      }
+    }else{
+      document.getElementById("text_p1").innerText = (Object.keys(dict).join(',') + '\r\n' + excel_url + '\r\n' + s)
+    }
+  }catch(e){}
+  return s
+
+  // document.getElementById("text_p").innerText = (Object.keys(dict).join(',') + '\r\n' + 'http://127.0.0.1:8010/excel.php?n[]=' + Object.values(dict).join('&n[]=')+ `&outname=${outname}` + `&ts=${ts}\r\n` + s)
+  // shellExecuteByOAAssist('http://127.0.0.1:8010/excel.php?n[]=' + Object.values(dict).join('&n[]=') + `&outname=${outname}`)
+  return tbl;
+}
+
+function 旧早会统计() {
+  if(!vip)return;
   let {curSheet, tbl, row, col} = 获取有效表位置()
 
   let s = '', teji = '',
@@ -1042,7 +1302,202 @@ function 早会统计() {
   //  }
 }
 
+function 早会统计() {
+  if(!vip)return;
+  let {curSheet, tbl, row, col} = 获取有效表位置('审核标记')
+
+  let s = '', teji = '',
+    levels = [],
+    maptemp = {
+      "受限空间": 0,
+      "特级动火": 0,
+      "一级动火": 0,
+      "二级动火": 0
+    },
+    id = 1, id1 = 0, minghuo_worklist = ''
+
+  for (let i = row+1; i <= tbl.Rows.Count; id++, i++) {
+    (obj => {
+      let chejian = obj.Item(CHEJIAN_COL.distance(col)).Text.replace(/[\r\n\t]/g, ','),
+        content = obj.Item(CONTENT_COL.distance(col)).Text.replace(/[\r\n\t]/g, ','),
+        pos = obj.Item(POS_COL.distance(col)).Text.replace(/[\r\n\t]/g, ','),
+        level = obj.Item(JIBIE_COL.distance(col)).Text.replace(/[\r\n\t,，]/g, ',').replace('高处特级', '高处四级'),
+        minghuo_state = obj.Item(MINGHUO_COL.distance(col)).Text
+
+      levels.push(level)
+
+      if(/(特级动火|受限)/.test(level)){
+        teji += id + '、' + chejian + '\r\n' + pos + ',' + content + '。涉及' + level + ';\r\n'
+      }
+
+      if(!/聚丙/.test(chejian))
+        chejian = chejian.replace(/[一二]/,'')
+
+      if (/(受限|动火)/.test(level)){
+        if (/(磨|焊|割)/.test(content) || (!/非明火/.test(minghuo_state))) {
+          背景填充(COLORS.Yellow_deep, tbl.Rows.Item(i))
+          id1++
+          minghuo_worklist += id1 + '、' + chejian + '\r\n' + pos + ',' + content + '。涉及' + level + ';\r\n'
+        }
+      }
+
+      s += id + '、' + chejian + '\r\n' + pos + ',' + content + '。涉及' + level + ';\r\n'
+    })(curSheet.Rows.Item(i).Columns)
+  }
+
+  levels = levels.map((item) => {
+    return item.replace(/\(.*\)/g, '')
+  }).join(',')
+
+  levels = levels.split(/[,，]/).reduce(function(a,b,c){
+    if(b=='动土' || b=='断路')
+      b = b + '作业'
+
+      if(a[b]==undefined){
+        a[b] = 0
+      }
+      a[b] += 1
+      return a;
+  },{})
+
+  // 删除作业数量0的key
+  // console.log(Object.keys(levels).filter((key)=>levels[key]!=0).reduce((aac,key)=>({ ...aac, [key]: levels[key] }),{}))
+
+  levels = Object.keys(maptemp).filter((key)=>levels[key]!=undefined).map((key)=>(`${key} ${levels[key]} 项`) ).join('\r\n')
+
+  s = s.replace(/[\r\n]*$/g,'').replace(/[\.。]+/g,'。').replace(/;$/,'。')
+
+  let line = tbl.Rows.Count
+  let ts = new Date(curSheet.Rows.Item(line).Columns.Item(END_T_COL.distance(col)).Text).format('M月d日')
+
+  // s.match(/^\d+\**\d*/gm)
+
+  try{
+    document.getElementById("text_p1").innerText =  `${ts}动火、受限空间作业共计 ${id-1} 项\r\n${levels}\r\n涉及电气焊等明火作业 ${id1} 项, 防腐保温类 ${id-1-id1} 项。\r\n\r\n动火特级、受限空间作业：\r\n${teji}\r\n重点关注(明火作业)：\r\n` + minghuo_worklist
+    // document.getElementById("text_p1").innerText =  `${ts}动火、受限空间作业共计 ${id-1} 项\r\n${levels}\r\n涉及电气焊等明火作业 ${id1} 项, 防腐保温类 ${id-1-id1} 项。\r\n\r\n动火特级、受限空间作业：\r\n${teji}\r\n重点关注：\r\n${s}`
+  }catch(e){}
+
+  return tbl;
+  // let curSheet = Application.EtApplication().ActiveSheet;
+  // if (curSheet) {
+  //  curSheet.Cells.Item(1, 1).Formula = "Hello, wps加载项!" + curSheet.Cells.Item(1, 1).Formula
+  // }
+  // Application.Cells(tbl.Rows.Count + 1, "C").Value2 = s
+  // Application.Cells(tbl.Rows.Count + 1, "C").HorizontalAlignment = wps.Enum.xlHAlignLeft
+  // Application.Cells(tbl.Rows.Count + 1, "C").Rows.AutoFit()
+  //  级别:
+  //  let line = tbl.Rows.Count
+  //  let _tmp = tbl.Range("J3:J"+line)
+  //  for(let i=1; i<=_tmp.Count; i++){
+  //      let t = _tmp.Rows.Item(i).Text
+  //      t = t.replace(/[\r\n]+/g,'，')
+  //      level.push(t)
+  //  }
+}
+
 function 作业统计() {
+  if(!vip)return;
+  let {curSheet, tbl, row, col} = 获取有效表位置('审核标记')
+
+  let s = '',
+    levels = [],
+    maptemp = {
+      "受限空间": 0,
+      "特级动火": 0,
+      "一级动火": 0,
+      "二级动火": 0,
+      "Ⅰ级高处": 0,
+      "Ⅱ级高处": 0,
+      "Ⅲ级高处": 0,
+      "Ⅳ级高处": 0,
+      "盲板抽堵": 0,
+      "断路作业": 0,
+      "动土作业": 0,
+      "临时用电": 0,
+      "一级吊装": 0,
+      "二级吊装": 0,
+      "三级吊装": 0,
+      "检维修": 0,
+    },
+    id = 1
+
+  for (let i = row+1; i <= tbl.Rows.Count; id++,
+    i++) {
+    (obj => {
+      let chejian = obj.Item(CHEJIAN_COL.distance(col)).Text.replace(/[\r\n\t]/g, ','),
+        content = obj.Item(CONTENT_COL.distance(col)).Text.replace(/[\r\n\t]/g, ','),
+        pos = obj.Item(POS_COL.distance(col)).Text.replace(/[\r\n\t]/g, ','),
+        level = obj.Item(JIBIE_COL.distance(col)).Text.replace(/[\r\n\t,，]/g, ',').replace('高处特级', '高处四级')
+        content = content.replace(/\s/g, '')
+        pos = pos.replace(/\s/g, '')
+
+      if(!/聚丙/.test(chejian))
+        chejian = chejian.replace(/[一二]/,'')
+
+      if(/聚丙/.test(chejian)){
+        chejian = chejian.replace('车间','')
+        content = chejian + '装置,' + content
+        chejian = chejian.replace(/[一二]/,'车间')
+      }
+
+      levels.push(level)
+      s += id + '、' + chejian + '\r\n' + pos + ',' + content + '。涉及' + level + ';\r\n'
+    })(curSheet.Rows.Item(i).Columns)
+  }
+
+  levels = levels.map((item) => {
+    return item.replace(/\(.*\)/g, '')
+  }).join(',')
+
+  levels = levels.split(/[,，]/).reduce(function(a,b,c){
+    if(b=='动土' || b=='断路')
+      b = b + '作业'
+
+      // a[b] += 1
+
+      if(a[b]==undefined){
+        a[b] = 0
+      }
+      a[b] += 1
+      return a;
+  },{})
+
+  // 删除作业数量0的key
+  // console.log(Object.keys(levels).filter((key)=>levels[key]!=0).reduce((aac,key)=>({ ...aac, [key]: levels[key] }),{}))
+
+  levels = Object.keys(maptemp).filter((key)=>levels[key]!=undefined).map((key)=>(`${key} ${levels[key]} 项`) ).join(', ')
+
+  s = s.replace(/[\r\n]*$/g,'').replace(/[\.。]+/g,'。').replace(/;$/,'。')
+
+  let line = tbl.Rows.Count
+  let ts = new Date(curSheet.Rows.Item(line).Columns.Item(END_T_COL.distance(col)).Text).format('M月d日')
+
+  // s.match(/^\d+\**\d*/gm)
+
+  try{
+    document.getElementById("text_p1").innerText = `${ts}乙烯分公司检维修作业：\r\n${s}\r\n\r\n其中涉及${levels}，共计${id-1}项。`
+  }catch(e){}
+
+  return tbl;
+  // let curSheet = Application.EtApplication().ActiveSheet;
+  // if (curSheet) {
+  //  curSheet.Cells.Item(1, 1).Formula = "Hello, wps加载项!" + curSheet.Cells.Item(1, 1).Formula
+  // }
+  // Application.Cells(tbl.Rows.Count + 1, "C").Value2 = s
+  // Application.Cells(tbl.Rows.Count + 1, "C").HorizontalAlignment = wps.Enum.xlHAlignLeft
+  // Application.Cells(tbl.Rows.Count + 1, "C").Rows.AutoFit()
+  //  级别:
+  //  let line = tbl.Rows.Count
+  //  let _tmp = tbl.Range("J3:J"+line)
+  //  for(let i=1; i<=_tmp.Count; i++){
+  //      let t = _tmp.Rows.Item(i).Text
+  //      t = t.replace(/[\r\n]+/g,'，')
+  //      level.push(t)
+  //  }
+}
+
+function 旧作业统计() {
+  if(!vip)return;
   let {curSheet, tbl, row, col} = 获取有效表位置()
 
   let s = '',
@@ -1071,24 +1526,24 @@ function 作业统计() {
   for (let i = row+1; i <= tbl.Rows.Count; id++,
     i++) {
     (obj => {
-      let workshop = obj.Item("D".distance(col)).Text.replace(/[\r\n\t]/g, ','),
+      let chejian = obj.Item("D".distance(col)).Text.replace(/[\r\n\t]/g, ','),
         content = obj.Item("F".distance(col)).Text.replace(/[\r\n\t]/g, ','),
         pos = obj.Item("I".distance(col)).Text.replace(/[\r\n\t]/g, ','),
         level = obj.Item("J".distance(col)).Text.replace(/[\r\n\t,，]/g, ',').replace('高处特级', '高处四级')
         content = content.replace(/\s/g, '')
         pos = pos.replace(/\s/g, '')
 
-      if(!/聚丙/.test(workshop))
-        workshop = workshop.replace(/[一二]/,'')
+      if(!/聚丙/.test(chejian))
+        chejian = chejian.replace(/[一二]/,'')
 
-      if(/聚丙/.test(workshop)){
-        workshop = workshop.replace('车间','')
-        content = workshop + '装置,' + content
-        workshop = workshop.replace(/[一二]/,'车间')
+      if(/聚丙/.test(chejian)){
+        chejian = chejian.replace('车间','')
+        content = chejian + '装置,' + content
+        chejian = chejian.replace(/[一二]/,'车间')
       }
 
       levels.push(level)
-      s += id + '、' + workshop + '\r\n' + pos + ',' + content + '。涉及' + level + ';\r\n'
+      s += id + '、' + chejian + '\r\n' + pos + ',' + content + '。涉及' + level + ';\r\n'
     })(curSheet.Rows.Item(i).Columns)
   }
 
@@ -1144,10 +1599,432 @@ function 作业统计() {
 }
 
 async function 线上风险研判() {
+  if(!vip)return;
   $getWork(-1);
 }
 
+function 新离线风险研判() {
+  if(!vip)return;
+  let {curSheet, tbl, row, col} = 获取有效表位置('审核标记')
+  let logmsg = []
+
+  let checkfun = (obj)=>{
+    let {person,jiezhi,jibie,start_t,end_t, tbl, i, fuzeren, chejian, content, luxiang, minghuo_state, workname} = obj
+    let columns = curSheet.Rows.Item(i).Columns
+    let personNums = person.match(/\d+/)
+    personNums = personNums===null?0:personNums[0]
+
+    let custom_rules = '@'
+    try{
+      custom_rules = document.getElementById('rules').value || custom_rules
+    }catch(e){
+      console.log('控制台环境正常报错')
+    }
+
+    //标记错误行为红色
+    if(
+      new RegExp(custom_rules).test(content) ||
+      new RegExp(custom_rules).test(workname) ||
+      person.length<4 ||
+      (
+        // 是否应该录像
+        (((/高处[特三四]级/.test(jibie)) || (/(动土|断路)/.test(jibie)) || ((/吊装[一二三]级/.test(jibie)) && (!/10吨/.test(jibie))) || (/(特级)/.test(jibie)) || (/受限/.test(jibie))) && (!/是/.test(luxiang))) ||
+        /[火受]/.test(jibie) &&
+        (
+          //裂解炉可燃介质的明火作业必须是特级
+          // ((!/空气|水|无|蒸汽/.test(jiezhi)) && (!/特级/.test(jibie)) && (!/非明火/.test(person)) && (/(炉|H-\d\d\d\d)/.test(content)) && (/火/.test(jibie))) ||
+
+          //裂解炉必须特级动火
+          (/^乙烯车间/.test(chejian) && /炉/.test(content) && !/特级/.test(jibie))||
+
+          (/火/.test(jibie) && !/(明火)/.test(minghuo_state)) ||
+          (/火/.test(jibie) && /(明火)/.test(minghuo_state)) ||
+
+          //不允许填无介质
+          /无/.test(jiezhi) ||
+
+          //是否填人数了
+          !/作\s*业\s*\d+\s*人\s*/.test(person) || !/作\s*业\s*\s*人\s*数\s*\d+/.test(person)
+
+          //作业时间范围
+          (
+            new Date(end_t).getHours()>=18 ||
+            new Date(start_t).getHours()<8 ||
+            (
+              new Date(end_t).getDate() != new Date(start_t).getDate() ||
+              new Date(end_t).getTime() <= new Date(start_t).getTime()
+            )
+          )
+        )
+      )
+    ){
+      if(new RegExp(custom_rules).test(content) || new RegExp(custom_rules).test(workname)){
+        背景填充(COLORS.Red, columns.Item(WORKNAME_COL.distance(col)))
+        logmsg.push(`<i data-pos="${WORKNAME_COL.distance(col)}${i}">${WORKNAME_COL.distance(col)}${i}：${chejian} <b data-pos="${WORKNAME_COL.distance(col)}${i}" style="color:red">${custom_rules}</b></i>`)
+      }
+
+      if(person.length<4){
+        背景填充(COLORS.Red, columns.Item(PERSON_COL.distance(col)))
+        // logmsg.push(`N${i}：备注栏信息不全`)
+        logmsg.push(`<i data-pos="${PERSON_COL.distance(col)}${i}">${PERSON_COL.distance(col)}${i}：${chejian} 备注栏信息不全</i>`)
+      }
+
+      // 检查哪些作业必须录像
+      // if (((/高处[特三四]级/.test(jibie)) || (/(动土|断路)/.test(jibie)) || ((/吊装[一二三]级/.test(jibie)) && (!/10吨/.test(jibie))) || (/(特级)/.test(jibie)) || (/受限/.test(jibie))) && (!/是/.test(person))) {
+      if (((/(特级)/.test(jibie)) || (/受限/.test(jibie))) && (!/是/.test(luxiang))) {
+        背景填充(COLORS.Red, columns.Item(LUXIANG_COL.distance(col)))
+        // logmsg.push(`N${i}：备注栏信息不全`)
+        logmsg.push(`<i data-pos="${LUXIANG_COL.distance(col)}${i}">${LUXIANG_COL.distance(col)}${i}：${chejian} <b data-pos="${LUXIANG_COL.distance(col)}${i}" style="color:red">必须录像</b></i>`)
+      }
+
+      // 裂解炉可燃介质工艺管线的动火应是特级
+      // if ((!/空气|水|无|蒸汽/.test(jiezhi)) && (!/特级/.test(jibie)) && (!/非明火/.test(person)) && (/(炉|H-\d\d\d\d)/.test(content)) && (/火/.test(jibie))) {
+      //   背景填充(COLORS.Red, columns.Item('J'.distance(col)))
+      //   logmsg.push(`<i data-pos="${'J'.distance(col)}${i}">${'J'.distance(col)}${i}： <b>炉区工艺管线</b>应是特级动火</i>`)
+      // }
+
+      // 乙烯裂解炉必须是特级动火
+      if(/^乙烯车间/.test(chejian) && /炉/.test(content) && !/特级/.test(jibie)){
+        背景填充(COLORS.Red, columns.Item(JIBIE_COL.distance(col)))
+        logmsg.push(`<i data-pos="${JIBIE_COL.distance(col)}${i}">${JIBIE_COL.distance(col)}${i}：<b data-pos="${JIBIE_COL.distance(col)}${i}" style="color:red">裂解炉特级</b></i>`)
+      }
+
+      // if(/火/.test(jibie) && !/工具/.test(content)){
+      //   背景填充(COLORS.Green, columns.Item('F'.distance(col)))
+      //   logmsg.push(`<i data-pos="${'F'.distance(col)}${i}">${'F'.distance(col)}${i}：${content} 作业内容没标明<b>工具</b></i>`)
+      // }
+
+      if (/火/.test(jibie)){
+        // 检查是否备注明火非明火
+        if (!/(明火)/.test(minghuo_state)) {
+          背景填充(COLORS.Red, columns.Item(MINGHUO_COL.distance(col)))
+          logmsg.push(`<i data-pos="${MINGHUO_COL.distance(col)}${i}">${MINGHUO_COL.distance(col)}${i}：${chejian} 未备注<b>是否明火</b></i>`)
+        } else {
+          // 如果备注了,判断备注的明火/非明火是否正确
+          if (/非明火/.test(minghuo_state)){
+            if(/(磨|焊|割)/.test(content)){
+              背景填充(COLORS.Red, columns.Item(MINGHUO_COL.distance(col)))
+              logmsg.push(`<i data-pos="${MINGHUO_COL.distance(col)}${i}">${MINGHUO_COL.distance(col)}${i}：${chejian} <b>应该是明火</b></i>`)
+            }
+          }else{
+            if(!/(磨|焊|割)/.test(content)){
+              背景填充(COLORS.Red, columns.Item(MINGHUO_COL.distance(col)))
+              logmsg.push(`<i data-pos="${MINGHUO_COL.distance(col)}${i}">${MINGHUO_COL.distance(col)}${i}：${chejian} <b data-pos="${MINGHUO_COL.distance(col)}${i}" style="color:red">应该是fei明火</b></i>`)
+            }
+          }
+        }
+      }
+
+      // 介质不允许填无
+      if((/无/.test(jiezhi) && /火/.test(jibie))){
+        背景填充(COLORS.Green, columns.Item(JIEZHI_COL.distance(col)))
+        logmsg.push(`<i data-pos="G${i}">G${i}：${chejian} <b>介质</b>不允许填无</i>`)
+        logmsg.push(`<i data-pos="${JIEZHI_COL.distance(col)}${i}">${JIEZHI_COL.distance(col)}${i}：${chejian} <b>介质</b>不允许填无</i>`)
+      }
+
+      if(!/作\s*业\s*\d+\s*人\s*/.test(person) && !/作\s*业\s*\s*人\s*数\s*\d+/.test(person)){
+        背景填充(COLORS.Green, columns.Item(PERSON_COL.distance(col)))
+        logmsg.push(`<i data-pos="${PERSON_COL.distance(col)}${i}">${PERSON_COL.distance(col)}${i}：${chejian} 作业N人后无冒号或未填写人数</i>`)
+      }
+
+      if(new Date(end_t).getHours()>=18){
+        背景填充(COLORS.Green, columns.Item(END_T_COL.distance(col)))
+        logmsg.push(`<i data-pos="${END_T_COL.distance(col)}${i}">${END_T_COL.distance(col)}${i}：时间超限</i>`)
+      }
+      if(new Date(start_t).getHours()<8){
+        背景填充(COLORS.Green, columns.Item(START_T_COL.distance(col)))
+        logmsg.push(`<i data-pos="${START_T_COL.distance(col)}${i}">${START_T_COL.distance(col)}${i}：时间超限</i>`)
+      }
+      if(new Date(end_t).getDate() != new Date(start_t).getDate()){
+        背景填充(COLORS.Green, columns.Item(START_T_COL.distance(col) + ':' + END_T_COL.distance(col)))
+        logmsg.push(`<i data-pos="${START_T_COL.distance(col)}${i}:${END_T_COL.distance(col)}${i}">${START_T_COL.distance(col)}${i}${END_T_COL.distance(col)}${i}：日期不合规</i>`)
+      }
+      if(new Date(end_t).getTime()<= new Date(start_t).getTime()){
+        背景填充(COLORS.Green, columns.Item(START_T_COL.distance(col) + ':' + END_T_COL.distance(col)))
+        logmsg.push(`<i data-pos="${START_T_COL.distance(col)}${i}:${END_T_COL.distance(col)}${i}">${START_T_COL.distance(col)}${i}${END_T_COL.distance(col)}${i}：开始时间晚于结束时间</i>`)
+      }
+    }
+
+    // 特级动火负责人必须是主任
+    chejianfuzeren = {
+      "乙烯车间": '申辉',
+      "聚乙烯一车间": '庄松',
+      "聚丙烯一车间": '廉强',
+      "聚丙烯二车间": '廉强',
+      "苯乙烯一车间": '宋晗',
+      "加氢抽提联合车间": '李玉忠',
+      "聚苯乙烯车间": '王春',
+      "水汽车间": '吴春明',
+      "储运车间": '李元元',
+      "仪表车间": '肖永峰',
+      "电气车间": '吕涛',
+      "成品车间": '王强'
+    }
+
+    if(/[火受]/.test(jibie)){
+      if(fuzeren.replace(/\s/g,'')!=chejianfuzeren[chejian]){
+      // if(!new RegExp(fuzeren,'g').test(chejianfuzeren[chejian])){
+        背景填充(COLORS.Green, columns.Item(FUZEREN_COL.distance(col)))
+        logmsg.push(`<i data-pos="${FUZEREN_COL.distance(col)}${i}">${FUZEREN_COL.distance(col)}${i}：负责人应该是<b data-pos="${FUZEREN_COL.distance(col)}${i}" style="color:green" >${chejianfuzeren[chejian]}</b></i>`)
+      }
+
+      //动火受限人数不能超过6
+      if(personNums>6){
+        背景填充(COLORS.Red, columns.Item(PERSON_COL.distance(col)))
+        logmsg.push(`<i data-pos="${PERSON_COL.distance(col)}${i}">${PERSON_COL.distance(col)}${i}：<b>人数</b>不能超过<b data-pos="${PERSON_COL.distance(col)}${i}" style="color:red" >6</b>个</i>`)
+      }
+    }
+  }
+  // if(tbl.Rows.Count==tbl.Columns.Count) 无作业
+
+  let line = tbl.Rows.Count
+
+  let levels = [],
+    haiyangwang = ''
+  for (let i = row+1, j = 0; i <= tbl.Rows.Count; i++) {
+    (obj => {
+      let id = obj.Item(ID_COL.distance(col)).Text.trim(),
+        level = obj.Item(JIBIE_COL.distance(col)).Text.replace(/[\r\n\t,，]/g, ',')
+      levels.push(level)
+    })(curSheet.Rows.Item(i).Columns)
+
+    let obj = curSheet.Rows.Item(i).Columns
+
+    let chejian = obj.Item(CHEJIAN_COL.distance(col)).Text.replace(/[\r\n\t,，]/g, '')
+    let pos = obj.Item(POS_COL.distance(col)).Text.replace(/[\r\n\t]/g, ',')
+    let fuzeren = obj.Item(FUZEREN_COL.distance(col)).Text.replace(/[\r\n\t,，]/g, '')
+    let person = obj.Item(PERSON_COL.distance(col)).Text
+    let jiezhi = obj.Item(JIEZHI_COL.distance(col)).Text
+    let jibie = obj.Item(JIBIE_COL.distance(col)).Text
+    let start_t = obj.Item(START_T_COL.distance(col)).Text.replaceAll('-','/')
+    let end_t = obj.Item(END_T_COL.distance(col)).Text.replaceAll('-','/')
+    let content = obj.Item(CONTENT_COL.distance(col)).Text.replace(/\s/g,'')
+    let minghuo_state = obj.Item(MINGHUO_COL.distance(col)).Text.replace(/\s/g,'')
+    let luxiang = obj.Item(LUXIANG_COL.distance(col)).Text.replace(/\s/g,'')
+    let workname = obj.Item(WORKNAME_COL.distance(col)).Text.replace(/[\r\n\t,，]/g, '')
+
+    if(vip){
+      checkfun({person: person.replace(/\s*$/g,''), jiezhi, jibie, start_t, end_t, curSheet, i, fuzeren, chejian, content, minghuo_state, luxiang, workname})
+    }
+
+    /* =================================================================== */
+    if(vip){
+      jibie = obj.Item(JIBIE_COL.distance(col)).Text.replace(/[\r\n\t,，]/g, ',').replace('高处特级|', '高处四级')
+      jibie = jibie.replace(/[ⅠⅡⅢⅣ]/,function(a,b,c){
+        return ({
+          'Ⅰ': '一',
+          'Ⅱ': '二',
+          'Ⅲ': '三',
+          'Ⅳ': '四'
+        })[a]||a
+      })
+
+      content = content.replace(/\s/g, '').replace(/工具.+$/g,'')
+      pos = pos.replace(/\s/g, '')
+
+      if(!/聚丙/.test(chejian)){
+        chejian = chejian.replace(/[一二]/,'')
+      }
+
+      if(/是/.test(obj.Item(LUXIANG_COL.distance(col)).Value2)){
+        // s += mappingObj[chejian] + ' ' + chejian.replace('车间','') + '-' + pos + ',' + content + '\r\n'
+        haiyangwang += mappingObj[chejian] + ' ' + chejian.replace('车间','') + '-' + pos + ',' + content + '-' + jibie + '\r\n'
+        j++
+      }
+    }
+    /* =================================================================== */
+
+  }
+
+  let riqi = new Date(curSheet.Rows.Item(row+1).Columns.Item(START_T_COL.distance(col)).Text).format('yyyy-MM-dd') + '至' + new Date(curSheet.Rows.Item(row+1).Columns.Item(END_T_COL.distance(col)).Text).format('yyyy-MM-dd')
+
+  heji = 0
+  heji = levels.length
+
+  levels = levels.map((item) => {
+    return item.replace(/\(.*\)/g, '')
+  }).join(',')
+
+  let a = {
+    '特级动火': 0,
+    '一级动火': 0,
+    '二级动火': 0,
+    '受限': 0,
+    'Ⅰ级高处': 0,
+    'Ⅱ级高处': 0,
+    'Ⅲ级高处': 0,
+    'Ⅳ级高处': 0,
+    '一级吊装': 0,
+    '二级吊装': 0,
+    '三级吊装': 0,
+    '盲板': 0,
+    '临时用电': 0,
+    '动土': 0,
+    '断路': 0,
+    '检维修': 0,
+    '动火': 0,
+    '高处': 0,
+    '吊装': 0,
+  }
+
+  let convert = function(k) {
+    let r = new RegExp(k, 'g')
+    let result = levels.match(r)
+    if (result != null)
+      return result.length;
+    return 0;
+  }
+  Object.keys(a).forEach((item) => {
+    a[item] = convert(item)
+    // heji += a[item]
+  })
+
+  let starttime = new Date(curSheet.Rows.Item(row+1).Columns.Item(START_T_COL.distance(col)).Text)
+  let word_url = `http://localhost:8010/tp6/public/index.php/word/exportWord?workdata[]=${a['特级动火']}&workdata[]=${a['一级动火']}&workdata[]=${a['二级动火']}&workdata[]=${a['受限']}&workdata[]=${a['盲板']}&workdata[]=${a['高处']}&workdata[]=${a['吊装']}&workdata[]=${a['临时用电']}&workdata[]=${a['动土']}&workdata[]=${a['断路']}&workdata[]=${a['检维修']}&riqi=${starttime.getTime()/1000}`
+
+  try{
+    $('#word_url').text('导出风险研判表')
+    $('#word_url')[0].dataset.url = word_url
+
+
+    $("#text_p1").text(haiyangwang)
+
+
+    $('#text_p2').html(logmsg.join('<br>'))
+    $('#text_p2').click(function(e){
+      Application.ActiveSheet.Range(e.target.dataset.pos).Select()
+    })
+
+    let tb = $('.cube')
+    if (tb.length <= 0) {
+      tb = $('<div class="cube">')
+      tb.appendTo('body')
+    }
+
+    tb.html(`
+      <table style="text-align: center; width: 100%;" border="1">
+        <thead>
+          <tr class="header">
+            <th>合计</th>
+            <th>日期</th>
+            <th>动火特级</th>
+            <th>动火一级</th>
+            <th>动火二级</th>
+            <th>受限空间</th>
+            <th class="tag" style="border-left: solid red 2px;">盲板</th>
+            <th>高处</th>
+            <th>吊装</th>
+            <th>临时用电</th>
+            <th class="tag" style="border-left: solid red 2px;">动土</th>
+            <th>断路</th>
+            <th>检维修</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>${heji}</td>
+            <td>${riqi}</td>
+            <td>${a['特级动火']}</td>
+            <td>${a['一级动火']}</td>
+            <td>${a['二级动火']}</td>
+            <td>${a['受限']}</td>
+            <td class="tag" style="border-left: solid red 2px;">${a['盲板']}</td>
+            <td>${a['高处']}</td>
+            <td>${a['吊装']}</td>
+            <td>${a['临时用电']}</td>
+            <td class="tag" style="border-left: solid red 2px;">${a['动土']}</td>
+            <td>${a['断路']}</td>
+            <td>${a['检维修']}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table style="text-align: center; width: 100%; margin-top: 20px" border="1">
+        <thead>
+          <tr class="header">
+            <th colspan=3>作业数量</th>
+            <th>${heji}</th>
+          </tr>
+
+          <tr class="header">
+            <th>作业类别</th>
+            <th>作业级别</th>
+            <th>作业数量</th>
+            <th>合计</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan=4>高处作业</td>
+            <td>高处一级</td>
+            <td>${a['Ⅰ级高处']}</td>
+            <td rowspan=4>${a['高处']}</td>
+          </tr>
+          <tr>
+            <td>高处二级</td>
+            <td>${a['Ⅱ级高处']}</td>
+          </tr>
+          <tr>
+            <td>高处三级</td>
+            <td>${a['Ⅲ级高处']}</td>
+          </tr>
+          <tr>
+            <td>高处四级</td>
+            <td>${a['Ⅳ级高处']}</td>
+          </tr>
+          <tr>
+            <td rowspan=3>动火作业</td>
+            <td>动火一级</td>
+            <td>${a['一级动火']}</td>
+            <td rowspan=3>${a['动火']}</td>
+          </tr>
+          <tr>
+            <td>动火二级</td>
+            <td>${a['二级动火']}</td>
+          </tr>
+          <tr>
+            <td>动火特级</td>
+            <td>${a['特级动火']}</td>
+          </tr>
+          <tr>
+            <td colspan=2>受限</td>
+            <td colspan=2>${a['受限']}</td>
+          </tr>
+          <tr>
+            <td colspan=2>吊装</td>
+            <td colspan=2>${a['吊装']}</td>
+          </tr>
+          <tr>
+            <td colspan=2>临时用电</td>
+            <td colspan=2>${a['临时用电']}</td>
+          </tr>
+          <tr>
+            <td colspan=2>断路</td>
+            <td colspan=2>${a['断路']}</td>
+          </tr>
+          <tr>
+            <td colspan=2>动土</td>
+            <td colspan=2>${a['动土']}</td>
+          </tr>
+          <tr>
+            <td colspan=2>盲板</td>
+            <td colspan=2>${a['盲板']}</td>
+          </tr>
+          <tr>
+            <td colspan=2>检维修作业</td>
+            <td colspan=2>${a['检维修']}</td>
+          </tr>
+        </tbody>
+      </table>
+    `)
+  }catch(e){
+    console.log(e)
+    // alert(e)
+  }
+}
+
 function 离线风险研判() {
+  if(!vip)return;
   let {curSheet, tbl, row, col} = 获取有效表位置()
   let logmsg = []
   let checkfun = (obj)=>{
@@ -1566,22 +2443,62 @@ function 备份工作表() {
 }
 
 function 拆分表格(){
-  if(!vip){
-    alert('内存不足')
-    // Swal.fire({
-    //   text: '内存不足',
-    //   icon: 'error',
-    //   confirmButtonText: 'OK'
-    // })
-    return;
+  if(!vip)return;
+
+  let {curSheet, tbl, row, col} = 获取有效表位置('审核标记')
+
+  /*函数废弃不用*/
+  let HandlingProcess = function(sh, date1){
+    // sh.Select()
+    // sh.Range("B3").Select()
+    let {curSheet, tbl, row, col} = 获取有效表位置('审核标记', sh)
+    // let curSheet = sh
+    for (let i = row+1, id=1; i <= tbl.Rows.Count; ) {
+      let start_t = curSheet.Rows.Item(i).Columns.Item(START_T_COL.distance(col)).Text.replaceAll('-','/')
+      let end_t = curSheet.Rows.Item(i).Columns.Item(END_T_COL.distance(col)).Text.replaceAll('-','/')
+      if(new Date(start_t).format("yyyy-MM-dd")!=date1){
+        curSheet.Rows.Item(i).Delete()
+        continue
+      }else{
+        curSheet.Rows.Item(i).Columns.Item(ID_COL.distance(col)).Value2 = id
+        id++
+      }
+      i++
+    }
   }
+
+  let riqi_container = []
+  for (let i = row+1; i <= tbl.Rows.Count; i++) {
+    let start_t = curSheet.Rows.Item(i).Columns.Item(START_T_COL.distance(col)).Text.replaceAll('-','/')
+    let outname = new Date(start_t).format("yyyy-MM-dd")
+    riqi_container.push(outname)
+  }
+
+  // 遍历sheet表逐表操作,与HandlingProcess同时废弃不用
+  let uniqueArray = [...new Set(riqi_container)];
+  console.log(uniqueArray)
+  for(let i=0; i<uniqueArray.length; i++){
+    Application.ActiveWindow.ActiveSheet.Copy(undefined, Application.ActiveSheet);
+    Application.Sheets.Item(i+2).Name = uniqueArray[i]
+  }
+
+  for(let i=0; i<uniqueArray.length; i++){//第一个是备份表,从第二个开始处理
+    HandlingProcess(Application.Sheets.Item(i+2), uniqueArray[i])
+  }
+
+  let a = Application.Sheets.Item(2).Select()
+}
+
+function 旧拆分表格(){
+  if(!vip)return;
+
   let {curSheet, tbl, row, col} = 获取有效表位置()
 
   /*函数废弃不用*/
   let HandlingProcess = function(sh, date1){
     // sh.Select()
     // sh.Range("B3").Select()
-    let {curSheet, tbl, row, col} = 获取有效表位置(sh)
+    let {curSheet, tbl, row, col} = 获取有效表位置('序号', sh)
     // let curSheet = sh
     for (let i = row+1, id=1; i <= tbl.Rows.Count; ) {
       let start_t = curSheet.Rows.Item(i).Columns.Item("K".distance(col)).Text.replaceAll('-','/')
@@ -1643,24 +2560,24 @@ function 统计日期() {
   for (let i = 3; i <= tbl.Rows.Count; i++) {
     let start_t = tbl.Rows.Item(i).Columns.Item("K").Text.replaceAll('-','/')
     let end_t = tbl.Rows.Item(i).Columns.Item("L").Text.replaceAll('-','/')
-    let workshop = tbl.Rows.Item(i).Columns.Item("D").Text.replace(/[\r\n\t,，]/g, '')
+    let chejian = tbl.Rows.Item(i).Columns.Item("D").Text.replace(/[\r\n\t,，]/g, '')
     let outname = new Date(start_t).format("yyyy-MM-dd")
     riqi_container.push(outname)
     if(!container[outname]){
       container[outname] = []
     }
-    container[outname].push(workshop)
+    container[outname].push(chejian)
   }
 
   let excel_image_urls = []
   for(let [outname,chejian] of Object.entries(container)){
     let tmpdict = Object.assign({}, dict);
-    for(let workshop of chejian){
-      if(/聚丙/.test(workshop)){
+    for(let chejian of chejian){
+      if(/聚丙/.test(chejian)){
         delete tmpdict['聚丙烯一车间']
         delete tmpdict['聚丙烯二车间']
       }else{
-        delete tmpdict[workshop]
+        delete tmpdict[chejian]
       }
     }
     let ts = new Date(outname).getTime()/1000
@@ -1704,12 +2621,21 @@ function 删除指定级别作业(pattern_str = '无特殊作业') {
 
 // 删除非动火受限项目
 function 动火受限(pattern_str = '(动火|受限)') {
-  let {curSheet, tbl, col, row} = 获取有效表位置()
+  if(!vip)return;
+  let {curSheet, tbl, col, row} = 获取有效表位置('审核标记')
+  let tejinum =  0,
+    yijinum = 0,
+    erjinum = 0,
+    shouxiannum = 0,
+    minghuonum = 0,
+    feiminghuonum = 0
+
 
   //保留动火受限行
   for (let i = row+1, j = 1; i <= tbl.Rows.Count;) {
 
-    let tmp = curSheet.Rows.Item(i).Columns.Item('J'.distance(col)).Text
+    let tmp = curSheet.Rows.Item(i).Columns.Item(JIBIE_COL.distance(col)).Text
+    let minghuo_state = curSheet.Rows.Item(i).Columns.Item(MINGHUO_COL.distance(col)).Text
 
     // tbl.Rows.Item(i).Columns.Item("A").Value2 = ""
 
@@ -1723,6 +2649,25 @@ function 动火受限(pattern_str = '(动火|受限)') {
       背景填充(COLORS.Yellow_light, tbl.Rows.Item(i))
     }
 
+    if(/特级/.test(tmp)){
+      tejinum++
+    }
+    if(/一级动火/.test(tmp)){
+      yijinum++
+    }
+    if(/二级动火/.test(tmp)){
+      erjinum++
+    }
+    if(/受限/.test(tmp)){
+      shouxiannum++
+    }
+    if(/动火/.test(tmp)){
+      if(/非明火/.test(minghuo_state)){
+        feiminghuonum++
+      }else{
+        minghuonum++
+      }
+    }
 
     if (new RegExp(pattern_str, 'g').test(tmp)) {} else {
       curSheet.Rows.Item(i).Delete()
@@ -1733,8 +2678,68 @@ function 动火受限(pattern_str = '(动火|受限)') {
   }
 
   try{
-    document.getElementById("text_p1").innerText = s
-  }catch(e){}
+    let tb = $('.cube')
+    if (tb.length <= 0) {
+      tb = $('<div class="cube">')
+      tb.appendTo('body')
+    }
+
+    tb.html(`
+      <table style="text-align: center; width: 100%;" border="1">
+        <tbody>
+          <tr>
+            <td>乙烯合计</td>
+            <td>明火</td>
+            <td>${minghuonum}</td>
+            <td>非明火</td>
+            <td>${feiminghuonum}</td>
+            <td>受限</td>
+            <td>${shouxiannum}</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td rowspan=4>汇总</td>
+            <td colspan=15>2024年×月×日（周×）</td>
+          </tr>
+          <tr>
+            <td colspan=2>特级动火</td>
+            <td colspan=1>${tejinum}</td>
+            <td colspan=1>一级动火</td>
+            <td colspan=1>${yijinum}</td>
+            <td colspan=1>二级动火</td>
+            <td colspan=1>${erjinum}</td>
+            <td colspan=2>受限</td>
+            <td colspan=1>${shouxiannum}</td>
+            <td colspan=1>明火作业</td>
+            <td colspan=2>${minghuonum}</td>
+            <td colspan=1>非明火作业</td>
+            <td colspan=1>${feiminghuonum}</td>
+          </tr>
+          <tr>
+            <td colspan=15 rowspan=2>其他单位未上报</td>
+          </tr>
+        </tbody>
+      </table>
+    `)
+  }catch(e){
+    // console.log(e)
+    alert(e)
+  }
+
+
+
+
+
+
+
 
   return tbl
 }
@@ -1793,12 +2798,15 @@ function 备注列格式化(){
 $AddCss('../js/src/style.css')
 
 $(function() {
-  $('#date1').keypress(function(e) {
-    if (e.which == 13) {
-      let d = document.getElementById('date1').value
-      $getWork(d)
-    }
+  // $('#rules').keypress(function(e) {
+  $('#rules').dblclick(function(e) {
+    // if (e.which == 13) {
+      // let d = document.getElementById('rules').value
+      // $getWork(d)
+    // }
+      document.getElementById('rules').value = ''
   })
+
   $('#text_p2, #text_p1, #log_text, .cube').dblclick(function() {
     // this.innerText = ''
 		$('#word_url, .cube, #text_p1, #text_p2, #log_text').text('')
