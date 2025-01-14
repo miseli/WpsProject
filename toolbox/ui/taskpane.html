@@ -48,8 +48,10 @@
 					<!--                     <button data-action="线上风险研判" title="结果受是否审批影响"></button>
 <label>日期差值：<input id="date1" type="text"/></label> -->
 					<!-- <br/> -->
-					<button data-action="离线风险研判" title=""></button>
+					<!-- <button data-action="离线风险研判" title=""></button> -->
 					<button data-action="新离线风险研判" title=""></button>
+					<input type="checkbox" id="isShengJi" />升级
+					<input type="button" onclick="location.reload();" value="刷新当前页面">
 					<br />
 					<label>自定义规则：<input id="rules" type="text" /></label>
 					<br />
@@ -84,6 +86,7 @@
 					<button data-action="备份工作表"></button>
 					<br />
 					<button data-action="拆分表格" title="根据作业日期拆分成多个Sheet表"></button>
+					<button data-action="安环排班" title="安环处管理人员现场动火、受限空间作业监管排班表"></button>
 				</div>
 			</div>
 		</div>
@@ -177,6 +180,17 @@ div.right {
 <script src="../js/lib/axios.min.js"></script>
 <script src="../js/lib/sweetalert2.all.min.js"></script>
 <script src="../js/lib/codemirror.bundle.js"></script>
-<script src="../js/src/util.js"></script>
-<script src="../js/src/dialog.js"></script>
+
+<script language="javascript">
+	function loadjs(){
+		let time=new Date().getTime()
+		document.write(`<script language="javascript" src="../js/src/util.js?time=${time}"><\/script>`)
+		document.write(`<script language="javascript" src="../js/src/dialog.js?time=${time}"><\/script>`)
+	}
+	loadjs()
+
+
+</script>
+<!-- <script src="../js/src/util.js"></script> -->
+<!-- <script src="../js/src/dialog.js"></script> -->
 </html>

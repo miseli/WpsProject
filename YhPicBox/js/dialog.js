@@ -3,8 +3,8 @@ function 宋体小四()
     let wdCellAlignVerticalCenter=1,wdAlignParagraphCenter=1,wdAlignParagraphLeft=0
     // let wdUseDestinationStylesRecovery = 19
     // Application.Selection.PasteAndFormat(wdUseDestinationStylesRecovery);
-    Application.Selection.Font.Size = 12;
-    Application.Selection.Font.SizeBi = 12;
+    Application.Selection.Font.Size = 14;
+    Application.Selection.Font.SizeBi = 14;
     Application.Selection.Font.Name = "宋体";
 
     Application.Selection.Cells.VerticalAlignment = wdCellAlignVerticalCenter;
