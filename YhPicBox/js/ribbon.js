@@ -2,8 +2,8 @@ function 宋体小四()
 {
     // let wdUseDestinationStylesRecovery = 19
     // Application.Selection.PasteAndFormat(wdUseDestinationStylesRecovery);
-    Application.Selection.Font.Size = 12;
-    Application.Selection.Font.SizeBi = 12;
+    Application.Selection.Font.Size = 14;
+    Application.Selection.Font.SizeBi = 14;
     Application.Selection.Font.Name = "宋体";
 
     // console.log(Application.Selection.Start,'|')
