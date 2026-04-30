@@ -17,5 +17,8 @@ $(()=>{
 	}).click(function(e){
 		let action = $(this).data('action')
 		window[action].call(this)
+	}).dblclick(function(e){
+		let action = $(this).data('action')
+		window[action+'_dblclick'].call(this)
 	})
 })
